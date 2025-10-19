@@ -1,4 +1,4 @@
-#include "Trail.h"
+#include "Trail.hpp"
 
 void Trail::addSectionRed(glm::vec3 from, glm::vec3 to)
 {

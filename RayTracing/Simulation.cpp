@@ -1,4 +1,4 @@
-﻿#include "Simulation.h"
+﻿#include "Simulation.hpp"
 
 void Simulation::initWindow()
 {
@@ -31,10 +31,9 @@ void Simulation::run()
 {
 	initWindow();
 	Input::setWindow(m_window);
-	glfwSetWindowUserPointer(m_window, this);
-	m_rendererHandle.setWindow(m_window);
-	m_rendererHandle.setCamera(&m_camera);
-	m_rendererHandle.init();
+	m_rendererHandle->setWindow(m_window);
+	m_rendererHandle->setCamera(&m_camera);
+	m_rendererHandle->init();
 	glfwSetInputMode(m_window, GLFW_STICKY_KEYS, GLFW_TRUE);
 	glfwMakeContextCurrent(m_window);
 
@@ -50,18 +49,18 @@ void Simulation::run()
 	ImGui::StyleColorsDark();
 	ImGui_ImplGlfw_CursorPosCallback(m_window, Input::mousePos.x, Input::mousePos.y);
 
-	// ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+	ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
 	AxesModel axes(glm::vec3(0.0f));
-	m_rendererHandle.addRenderables(&axes);
+	m_rendererHandle->addRenderables(&axes);
 
 	//ChargedCuboid cuboid(1.0, Types::Vec3d(0.0), Types::Vec3d(2.0, 3.0, 4.0));
 
 	while (!glfwWindowShouldClose(m_window))
 	{
 		glfwPollEvents();
-		m_camera.update(static_cast<float>(m_rendererHandle.getDeltaTime()));
-		m_rendererHandle.newFrame();
+		m_camera.update(static_cast<float>(m_rendererHandle->getDeltaTime()));
+		m_rendererHandle->newFrame();
 		ImGui_ImplVulkan_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
@@ -101,10 +100,10 @@ void Simulation::run()
 		displayPlotWindow();
 
 		ImGui::Render();
-		m_rendererHandle.recordImguiData(ImGui::GetDrawData());
+		m_rendererHandle->recordImguiData(ImGui::GetDrawData());
 	}
 
-	m_rendererHandle.cleanup();
+	m_rendererHandle->cleanup();
 	glfwDestroyWindow(m_window);
 	glfwTerminate();
 }
@@ -324,11 +323,201 @@ bool Simulation::updatePositions()
 	return true;
 }
 
+void Simulation::startSimulation()
+{
+	if (m_elapsedTime > 0.0)
+	{
+		restartSimulation();
+	}
+	if (m_particles.size() > 0)
+	{
+		for (auto& particle : m_particles)
+		{
+			if (particle.initialStateData())
+			{
+				particle.setAffectingForce(particle.getInitialState().affectingForce);
+				particle.setAcceleration(particle.getInitialState().acceleration);
+				particle.setVelocity(particle.getInitialState().velocity);
+				particle.setPos(particle.getInitialState().pos);
+				particle.update();
+			}
+			particle.clearStates();
+			particle.pushState(0);
+		}
+
+		switch (m_mode)
+		{
+		case SimulationMode::Static:
+			break;
+		case SimulationMode::PrecalculatedAll:
+			calculateParticlePositions(true);
+			break;
+		case SimulationMode::Precalculated20Ms:
+			if (m_threadedCalculation)
+			{
+				launchParticleThreads();
+			}
+			break;
+		case SimulationMode::Realtime:
+			break;
+		}
+		m_paused = false;
+	}
+}
+
+
+
+void Simulation::resetAll()
+{
+	m_skipUpdate = true;
+	m_paused = true;
+	m_mutualMaxStep = 0;
+	m_elapsedTime = 0.0;
+
+	if (m_threadedCalculation)
+	{
+		for (int i = 0; i < m_threads.size(); i++)
+		{
+			if (m_threads[i].joinable()) {
+				m_threads[i].join();
+			}
+		}
+	}
+
+	for (auto& particle : m_particles)
+	{
+		particle.cleanup();
+	}
+	m_particles.clear();
+	Particle::resetId();
+}
+
+void Simulation::restartSimulation()
+{
+	m_skipUpdate = true;
+	m_paused = true;
+	m_mutualMaxStep = 0;
+	m_elapsedTime = 0.0;
+
+	if (m_threadedCalculation)
+	{
+		for (int i = 0; i < m_threads.size(); i++)
+		{
+			if (m_threads[i].joinable()) {
+				m_threads[i].join();
+			}
+		}
+	}
+
+	for (auto& particle : m_particles)
+	{
+		particle.resetTrail();
+		particle.statesData().clear();
+		particle.setMaxStep(0);
+		particle.setAffectingForce(particle.getInitialState().affectingForce);
+		particle.setAcceleration(particle.getInitialState().acceleration);
+		particle.setVelocity(particle.getInitialState().velocity);
+		particle.setPos(particle.getInitialState().pos);
+		particle.update();
+	}
+
+}
+
+void Simulation::updateStatic() 
+{
+	for (auto& particle : m_particles)
+	{
+		Types::Vec3d force{ 0.0 };
+		for (auto& particle_other : m_particles)
+		{
+			if (particle.getId() != particle_other.getId())
+			{
+				force += particle.getCoulombForce(0, particle_other);
+			}
+		}
+		particle.setAffectingForce(force);
+	}
+
+	for (auto& particle : m_particles)
+	{
+		particle.update();
+	}
+}
+
+void Simulation::updateAllPrecalc()
+{
+	auto start = std::chrono::high_resolution_clock::now();
+	m_maxUsedStep = m_elapsedTime / m_timeStep;
+	updatePositions();
+	m_elapsedTime = std::clamp(m_elapsedTime + m_rendererHandle->getDeltaTime(), 0.0, m_simulationTime);
+
+	if (m_elapsedTime == m_simulationTime)
+	{
+		m_maxUsedStep = m_mutualMaxStep;
+		updatePositions();
+		m_paused = true;
+	}
+	auto end = std::chrono::high_resolution_clock::now();
+	m_timeToCalculateAllParticlePos = std::chrono::duration_cast<std::chrono::milliseconds>(start - end).count();
+}
+
+void Simulation::update20MsPecalc()
+{
+	m_maxUsedStep = m_elapsedTime / m_timeStep;
+
+	if (m_maxUsedStep <= m_mutualMaxStep)
+	{
+		updatePositions();
+		m_elapsedTime = std::clamp(m_elapsedTime + std::min(m_rendererHandle->getDeltaTime(), 0.02), 0.0, m_simulationTime);
+		for (auto& particle : m_particles)
+		{
+			std::erase_if(particle.statesData(), [this](const auto& item)
+			{
+					auto const& [key, value] = item;
+					return key < std::min(m_maxUsedStep - 2000, m_maxUsedStep);
+			});
+		}
+	}
+	calculateParticlePositions();
+
+	if (m_elapsedTime == m_simulationTime)
+	{
+		m_maxUsedStep = m_mutualMaxStep;
+		updatePositions();
+		m_paused = true;
+	}
+}
+
+void Simulation::updateRealTime()
+{
+	for (auto& particle : m_particles)
+	{
+		for (auto& particleOther : m_particles)
+		{
+			if (particle.getId() != particleOther.getId())
+			{
+				particle.setAffectingForce(particle.getCoulombForce(particleOther));
+			}
+		}
+		if (particle.isMovable())
+		{
+			particle.update(m_rendererHandle->getDeltaTime());
+		}
+	}
+	m_elapsedTime += m_rendererHandle->getDeltaTime();
+}
+
+//////////////////////////////////////////////////////////////////
+/*                                                              */
+/*                           GUI                                */											
+/*                                                              */
+//////////////////////////////////////////////////////////////////
+
 void Simulation::displayMainCtrlWindow()
 {
 	ImGui::SetNextWindowPos(ImVec2(0, 0));
 	ImGui::SetNextWindowBgAlpha(WINDOWS_BG_ALPHA);
-	ImGui::SetNextWindowSizeConstraints(MAIN_CTRL_WINDOW_MIN_SIZE, ImVec2(m_particleAddWindowInfo.pos.x, static_cast<float>(m_rendererHandle.getFramebufferHeight()) / 2.0f));
+	ImGui::SetNextWindowSizeConstraints(MAIN_CTRL_WINDOW_MIN_SIZE, ImVec2(m_particleAddWindowInfo.pos.x, static_cast<float>(m_rendererHandle->getFramebufferHeight()) / 2.0f));
 	if (!ImGui::Begin("Options"))
 	{
 		ImGui::End();
@@ -342,7 +531,7 @@ void Simulation::displayMainCtrlWindow()
 	ImVec2 mousePositionRelative = ImVec2(mousePositionAbsolute.x - screenPositionAbsolute.x, mousePositionAbsolute.y - screenPositionAbsolute.y);
 	ImGui::Text("Time Elapsed: %fs", m_elapsedTime.load());
 	//ImGui::Text("Position: %f, %f", mousePositionRelative.x, mousePositionRelative.y);
-	ImGui::Text("Own Delta Time: %fs", m_rendererHandle.getDeltaTime());
+	ImGui::Text("Own Delta Time: %fs", m_rendererHandle->getDeltaTime());
 	ImGui::Text("ImGui Delta Time: %fs", ImGui::GetIO().DeltaTime);
 	ImGui::Text("Framerate: %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
@@ -506,54 +695,12 @@ void Simulation::displayMainCtrlWindow()
 	ImGui::End();
 }
 
-void Simulation::startSimulation()
-{
-	if (m_elapsedTime > 0.0)
-	{
-		restartSimulation();
-	}
-	if (m_particles.size() > 0)
-	{
-		for (auto& particle : m_particles)
-		{
-			if (particle.initialStateData())
-			{
-				particle.setAffectingForce(particle.getInitialState().affectingForce);
-				particle.setAcceleration(particle.getInitialState().acceleration);
-				particle.setVelocity(particle.getInitialState().velocity);
-				particle.setPos(particle.getInitialState().pos);
-				particle.update();
-			}
-			particle.clearStates();
-			particle.pushState(0);
-		}
-
-		switch (m_mode)
-		{
-		case SimulationMode::Static:
-			break;
-		case SimulationMode::PrecalculatedAll:
-			calculateParticlePositions(true);
-			break;
-		case SimulationMode::Precalculated20Ms:
-			if (m_threadedCalculation)
-			{
-				launchParticleThreads();
-			}
-			break;
-		case SimulationMode::Realtime:
-			break;
-		}
-		m_paused = false;
-	}
-}
-
 void Simulation::displayParticleListWindow()
 {
     std::vector<std::vector<Particle>::iterator> particlesToRemove;
-    ImGui::SetNextWindowPos(ImVec2(m_rendererHandle.getFramebufferWidth() - m_particleListWindowInfo.size.x, 0.0f));
+    ImGui::SetNextWindowPos(ImVec2(m_rendererHandle->getFramebufferWidth() - m_particleListWindowInfo.size.x, 0.0f));
 	ImGui::SetNextWindowBgAlpha(WINDOWS_BG_ALPHA);
-	ImGui::SetNextWindowSizeConstraints(PARTICLE_LIST_WINDOW_MIN_SIZE, ImVec2(m_rendererHandle.getFramebufferWidth() - MAIN_CTRL_WINDOW_MIN_SIZE.x - PARTICLE_ADD_WINDOW_MIN_SIZE.x, m_rendererHandle.getFramebufferHeight() * 0.9f));
+	ImGui::SetNextWindowSizeConstraints(PARTICLE_LIST_WINDOW_MIN_SIZE, ImVec2(m_rendererHandle->getFramebufferWidth() - MAIN_CTRL_WINDOW_MIN_SIZE.x - PARTICLE_ADD_WINDOW_MIN_SIZE.x, m_rendererHandle->getFramebufferHeight() * 0.9f));
     if (!ImGui::Begin("Particles"))
     {
         ImGui::End();
@@ -643,9 +790,9 @@ void Simulation::displayParticleListWindow()
 
 void Simulation::displayParticleAddWindow()
 {
-    ImGui::SetNextWindowPos(ImVec2(m_rendererHandle.getFramebufferWidth() - m_particleListWindowInfo.size.x - m_particleAddWindowInfo.size.x, 0.0f));
+    ImGui::SetNextWindowPos(ImVec2(m_rendererHandle->getFramebufferWidth() - m_particleListWindowInfo.size.x - m_particleAddWindowInfo.size.x, 0.0f));
 	ImGui::SetNextWindowBgAlpha(WINDOWS_BG_ALPHA);
-    ImGui::SetNextWindowSizeConstraints(PARTICLE_ADD_WINDOW_MIN_SIZE, ImVec2(m_rendererHandle.getFramebufferWidth() - m_mainCtrlWindowInfo.size.x - m_particleListWindowInfo.size.x, static_cast<float>(m_rendererHandle.getFramebufferHeight()) / 2.0f));
+    ImGui::SetNextWindowSizeConstraints(PARTICLE_ADD_WINDOW_MIN_SIZE, ImVec2(m_rendererHandle->getFramebufferWidth() - m_mainCtrlWindowInfo.size.x - m_particleListWindowInfo.size.x, static_cast<float>(m_rendererHandle->getFramebufferHeight()) / 2.0f));
     if (!ImGui::Begin("Add Particle"))
     {
         ImGui::End();
@@ -801,62 +948,6 @@ void Simulation::displayPlotWindow()
 	ImGui::End();
 }
 
-void Simulation::resetAll()
-{
-	m_skipUpdate = true;
-	m_paused = true;
-	m_mutualMaxStep = 0;
-	m_elapsedTime = 0.0;
-
-	if (m_threadedCalculation)
-	{
-		for (int i = 0; i < m_threads.size(); i++)
-		{
-			if (m_threads[i].joinable()) {
-				m_threads[i].join();
-			}
-		}
-	}
-
-	for (auto& particle : m_particles)
-	{
-		particle.cleanup();
-	}
-	m_particles.clear();
-	Particle::resetId();
-}
-
-void Simulation::restartSimulation()
-{
-	m_skipUpdate = true;
-	m_paused = true;
-	m_mutualMaxStep = 0;
-	m_elapsedTime = 0.0;
-
-	if (m_threadedCalculation)
-	{
-		for (int i = 0; i < m_threads.size(); i++)
-		{
-			if (m_threads[i].joinable()) {
-				m_threads[i].join();
-			}
-		}
-	}
-
-	for (auto& particle : m_particles)
-	{
-		particle.resetTrail();
-		particle.statesData().clear();
-		particle.setMaxStep(0);
-		particle.setAffectingForce(particle.getInitialState().affectingForce);
-		particle.setAcceleration(particle.getInitialState().acceleration);
-		particle.setVelocity(particle.getInitialState().velocity);
-		particle.setPos(particle.getInitialState().pos);
-		particle.update();
-	}
-
-}
-
 void Simulation::displayUnitSelector(const std::string& unit, int& prefixIdx)
 {
 	if (ImGui::BeginCombo(("##"+unit).c_str(), UNIT_PREFIXES[prefixIdx]))
@@ -872,85 +963,4 @@ void Simulation::displayUnitSelector(const std::string& unit, int& prefixIdx)
 		}
 		ImGui::EndCombo();
 	}
-}
-
-void Simulation::updateStatic() 
-{
-	for (auto& particle : m_particles)
-	{
-		Types::Vec3d force{ 0.0 };
-		for (auto& particle_other : m_particles)
-		{
-			if (particle.getId() != particle_other.getId())
-			{
-				force += particle.getCoulombForce(0, particle_other);
-			}
-		}
-		particle.setAffectingForce(force);
-	}
-
-	for (auto& particle : m_particles)
-	{
-		particle.update();
-	}
-}
-
-void Simulation::updateAllPrecalc()
-{
-	m_maxUsedStep = m_elapsedTime / m_timeStep;
-	updatePositions();
-	m_elapsedTime = std::clamp(m_elapsedTime + m_rendererHandle.getDeltaTime(), 0.0, m_simulationTime);
-
-	if (m_elapsedTime == m_simulationTime)
-	{
-		m_maxUsedStep = m_mutualMaxStep.load();
-		updatePositions();
-		m_paused = true;
-	}
-}
-
-void Simulation::update20MsPecalc()
-{
-	m_maxUsedStep = m_elapsedTime / m_timeStep;
-
-	if (m_maxUsedStep <= m_mutualMaxStep)
-	{
-		updatePositions();
-		m_elapsedTime = std::clamp(m_elapsedTime + std::min(m_rendererHandle.getDeltaTime(), 0.02), 0.0, m_simulationTime);
-		for (auto& particle : m_particles)
-		{
-			std::erase_if(particle.statesData(), [this](const auto& item)
-			{
-					auto const& [key, value] = item;
-					return key < std::min(m_maxUsedStep.load() - 2000, m_maxUsedStep.load());
-			});
-		}
-	}
-	calculateParticlePositions();
-
-	if (m_elapsedTime == m_simulationTime)
-	{
-		m_maxUsedStep = m_mutualMaxStep.load();
-		updatePositions();
-		m_paused = true;
-	}
-}
-
-void Simulation::updateRealTime()
-{
-	for (auto& particle : m_particles)
-	{
-		for (auto& particleOther : m_particles)
-		{
-			if (particle.getId() != particleOther.getId())
-			{
-				particle.setAffectingForce(particle.getCoulombForce(particleOther));
-			}
-		}
-		if (particle.isMovable())
-		{
-			particle.update(m_rendererHandle.getDeltaTime());
-		}
-	}
-	m_elapsedTime += m_rendererHandle.getDeltaTime();
 }

@@ -23,19 +23,19 @@
 #include <memory>
 #include <set>
 
-#include "Renderer.h"
-#include "extras.h"
-#include "Camera.h"
-#include "Vertex.h"
-#include "Mesh.h"
-#include "PipelineFactory.h"
-#include "RendererStructs.h"
-#include "Models.h"
+#include "Renderer.hpp"
+#include "extras.hpp"
+#include "Camera.hpp"
+#include "Vertex.hpp"
+#include "Mesh.hpp"
+#include "PipelineFactory.hpp"
+#include "RendererStructs.hpp"
+#include "Models.hpp"
 
 class VulkanRenderer : public Renderer
 {
 public:
-	const static int MAX_FRAMES_IN_FLIGHT = 2;
+	constexpr const static int MAX_FRAMES_IN_FLIGHT = 3;
 
 	void setCamera(Camera* camera)
 	{
@@ -58,12 +58,14 @@ public:
 	void removeRenderable(std::multimap<std::string, Renderable, RenderableComp>::iterator& it) override;
 	void cleanup();
 	const int& getFramebufferWidth() const { return m_framebufferWidth; }
-	const int& getFramebufferHeight() const { return m_frameBufferheight; }
+	const int& getFramebufferHeight() const { return m_frameBufferHeight; }
 	const double& getDeltaTime() const { return m_deltaTime; }
 	double getDeltaTimeS() const { return m_deltaTime / 1000.0; }
 private:
+	void initImplVulkanImGui();
 	void initImgui();
-	void cleanupSwapChain();
+	void cleanupSyncObjects();
+	void cleanupSwapChain(bool recreate);
 	void recreateSwapChain();
 	void createInstance();
 	void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
@@ -111,41 +113,43 @@ private:
 	static void framebufferResizeCallback(GLFWwindow* window, int width, int height);
 	void drawObjects(VkCommandBuffer& commandBuffer);
 
-	//VARS
 	std::multimap<std::string, Renderable, RenderableComp> m_renderableObjects{};
 	uint64_t m_currentRenderableId = 0;
 	std::unordered_map<std::string, Mesh> m_meshes{};
 	std::unordered_map<std::string, Material> m_materials{};
 	std::vector<Texture> m_textures{};
 
-	std::vector<Mesh> testMesh;
+	std::vector<Mesh> testMesh{};
 
 	Camera* m_cameraPtr = nullptr;
 	GLFWwindow* m_window = nullptr;
-	VkInstance m_instance;
-	VkDebugUtilsMessengerEXT m_debugMessenger;
-	VkSurfaceKHR m_surface;
+	VkInstance m_instance = VK_NULL_HANDLE;
+	VkDebugUtilsMessengerEXT m_debugMessenger = VK_NULL_HANDLE;
+	VkSurfaceKHR m_surface = VK_NULL_HANDLE;
 	VkPhysicalDevice m_physicalDevice = VK_NULL_HANDLE;
-	VkDevice m_device;
-	VkQueue m_graphicsQueue;
-	VkQueue m_presentQueue;
+	VkDevice m_device = VK_NULL_HANDLE;
+	VkQueue m_graphicsQueue = VK_NULL_HANDLE;
+	VkQueue m_presentQueue = VK_NULL_HANDLE;
 
-	VkSwapchainKHR m_swapChain;
+	VkSwapchainKHR m_prevSwapChain = VK_NULL_HANDLE;
 	std::vector<VkImage> m_swapChainImages{};
-	VkFormat m_swapChainImageFormat;
-	VkExtent2D m_swapChainExtent;
+	VkFormat m_swapChainImageFormat{};
+	VkExtent2D m_swapChainExtent{};
 	std::vector<VkImageView> m_swapChainImageViews{};
 	std::vector<VkFramebuffer> m_swapChainFramebuffers{};
 
-	VkRenderPass m_renderPass;
-	VkDescriptorSetLayout m_descriptorSetLayout;
+	VkSwapchainKHR m_swapChain = VK_NULL_HANDLE;
 
-	VkCommandPool m_commandPool;
+	VkRenderPass m_renderPass = VK_NULL_HANDLE;
+	VkDescriptorSetLayout m_descriptorSetLayout = VK_NULL_HANDLE;
+
+	VkCommandPool m_commandPool = VK_NULL_HANDLE;
 	std::vector<VkCommandBuffer> m_commandBuffers{};
 
 	std::vector<VkSemaphore> m_imageAvailableSemaphores{};
 	std::vector<VkSemaphore> m_renderFinishedSemaphores{};
 	std::vector<VkFence> m_inFlightFences{};
+	std::vector<VkFence> m_imagesInFlight{};
 
 	uint32_t m_currentFrame = 0;
 
@@ -153,25 +157,25 @@ private:
 	std::vector<VkDeviceMemory> m_uniformBuffersMemory{};
 	std::vector<void*> m_uniformBuffersMapped{};
 
-	VkDescriptorPool m_descriptorPool;
-	std::vector<VkDescriptorSet> m_descriptorSets;
+	VkDescriptorPool m_descriptorPool = VK_NULL_HANDLE;
+	std::vector<VkDescriptorSet> m_descriptorSets{};
 
-	uint32_t m_mipLevels;
-	VkSampler m_textureSampler;
+	uint32_t m_mipLevels = 0;
+	VkSampler m_textureSampler = VK_NULL_HANDLE;
 
-	Image m_depthImage;
-	VkImageView m_depthImageView;
+	Image m_depthImage{};
+	VkImageView m_depthImageView = VK_NULL_HANDLE;
 
-	Image m_colorImage;
-	VkImageView m_colorImageView;
+	Image m_colorImage{};
+	VkImageView m_colorImageView = VK_NULL_HANDLE;
 
 	VkSampleCountFlagBits m_msaaSamples = VK_SAMPLE_COUNT_1_BIT;
 
 	int m_framebufferWidth = Constants::WIDTH;
-	int m_frameBufferheight = Constants::HEIGHT;
-	bool m_framebufferResized = false;
+	int m_frameBufferHeight = Constants::HEIGHT;
+	volatile bool m_framebufferResized = false;
 
-	VkDescriptorPool m_imguiDescriptorPool;
+	VkDescriptorPool m_imguiDescriptorPool = VK_NULL_HANDLE;
 	std::array<ImDrawData*, MAX_FRAMES_IN_FLIGHT> m_imguiDrawData{nullptr};
 
 	std::chrono::time_point<std::chrono::high_resolution_clock> m_lastFrameTime{};

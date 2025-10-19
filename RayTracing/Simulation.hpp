@@ -5,17 +5,17 @@
 #include <thread>
 #include <mutex>
 
-#include "VulkanRenderer.h"
-#include "Camera.h"
-#include "Input.h"
-#include "Models.h"
-#include "Particle.h"
-#include "ChargedCuboid.h"
+#include "VulkanRenderer.hpp"
+#include "Camera.hpp"
+#include "Input.hpp"
+#include "Models.hpp"
+#include "Particle.hpp"
+#include "ChargedCuboid.hpp"
 
 class Simulation
 {
 public:
-	Simulation(VulkanRenderer& rendererHandle) : 
+	Simulation(VulkanRenderer *rendererHandle) : 
 		m_rendererHandle(rendererHandle),
 		m_camera(Camera(glm::vec3(-10.0f, -10.0f, -10.0f), 0.0f, 0.0f, glm::vec3(0.0f, 0.0f, 1.0f))),
 		m_threads(NUM_THREADS)
@@ -102,8 +102,8 @@ private:
 	// VARIABLES
 	//
 	
-	GLFWwindow* m_window = nullptr;
-	VulkanRenderer& m_rendererHandle;
+	GLFWwindow *m_window = nullptr;
+	VulkanRenderer *m_rendererHandle;
 	Camera m_camera;
 
 	SimulationMode m_mode = SimulationMode::Precalculated20Ms;
@@ -118,9 +118,9 @@ private:
 	double m_startTime = 0.0;
 	double m_simulationTime = DEFAULT_SIMULATION_TIME;
 	double m_timeStep = DEFAULT_TIME_STEP;
-
-	std::atomic<uint32_t> m_mutualMaxStep = 0;
-	std::atomic<uint32_t> m_maxUsedStep = 0;
+	double m_timeToCalculateAllParticlePos = 0.0;
+	uint32_t m_mutualMaxStep = 0;
+	uint32_t m_maxUsedStep = 0;
 
 	// MULTITHREADING 
 	bool m_threadedCalculation = false;

@@ -3,7 +3,7 @@
 #include <map>
 #include <string>
 
-#include "RendererStructs.h"
+#include "RendererStructs.hpp"
 
 struct Model;
 

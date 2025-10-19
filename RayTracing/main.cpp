@@ -1,11 +1,11 @@
-#include "Simulation.h"
-#include "VulkanRenderer.h"
-#include "Node.h"
+#include "Simulation.hpp"
+#include "VulkanRenderer.hpp"
+#include "Node.hpp"
 
 int main() {
-	VulkanRenderer renderer;
+	VulkanRenderer renderer{};
 	Node::setRenderer(&renderer);
-    Simulation app(renderer);
+    Simulation app(&renderer);
 
     try
     {

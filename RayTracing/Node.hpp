@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Models.h"
-#include "Renderer.h"
+#include "Models.hpp"
+#include "Renderer.hpp"
 
 class Node
 {

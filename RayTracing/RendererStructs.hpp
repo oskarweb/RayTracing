@@ -1,12 +1,12 @@
 #pragma once 
 
-#include "Mesh.h"
+#include "Mesh.hpp"
 
 struct Material
 {
 	std::string name = "default";
-	VkPipeline pipeline;
-	VkPipelineLayout pipelineLayout;
+	VkPipeline pipeline = VK_NULL_HANDLE;
+	VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
 
 	Material() : pipeline(VK_NULL_HANDLE), pipelineLayout(VK_NULL_HANDLE) {}
 	Material(const std::string& name, VkPipeline pipeline, VkPipelineLayout pipelineLayout) : name(name), pipeline(pipeline), pipelineLayout(pipelineLayout) {}
@@ -14,9 +14,9 @@ struct Material
 
 struct Renderable
 {
-	Mesh* mesh;
-	Material* material;
-    glm::mat4 transformMatrix;
+	Mesh* mesh = nullptr;
+	Material* material = nullptr;
+    glm::mat4 transformMatrix{};
 
 	std::unique_ptr<int> textureIdx = nullptr;
 	uint64_t id = 0;
@@ -32,14 +32,14 @@ struct RenderableComp
 
 struct Image
 {
-	VkImage image;
-	VkDeviceMemory imageMemory;
+	VkImage image = VK_NULL_HANDLE;
+	VkDeviceMemory imageMemory = VK_NULL_HANDLE;
 };
 
 struct Texture
 {
-	Image image;
-	VkImageView imageView;
+	Image image{};
+	VkImageView imageView = VK_NULL_HANDLE;
 };
 
 struct QueueFamilyIndices
@@ -54,14 +54,14 @@ struct QueueFamilyIndices
 };
 
 struct SwapChainSupportDetails {
-	VkSurfaceCapabilitiesKHR capabilities;
-	std::vector<VkSurfaceFormatKHR> formats;
-	std::vector<VkPresentModeKHR> presentModes;
+	VkSurfaceCapabilitiesKHR capabilities{};
+	std::vector<VkSurfaceFormatKHR> formats{};
+	std::vector<VkPresentModeKHR> presentModes{};
 };
 
 struct CameraBuffer {
-	alignas(16) glm::mat4 view;
-	alignas(16) glm::mat4 proj;
+	glm::mat4 view{};
+	glm::mat4 proj{};
 };
 
 struct RenderableInfo
@@ -74,10 +74,10 @@ struct RenderableInfo
     ) : renderableName(renderableName), meshName(meshName), materialName(materialName), transformMatrix(transformMatrix) 
     {}
 
-    std::string renderableName;
-    std::string meshName;
-    std::string materialName;
-    glm::mat4 transformMatrix;
+    std::string renderableName{};
+    std::string meshName{};
+    std::string materialName{};
+    glm::mat4 transformMatrix{};
 };
 
 inline constexpr const std::array<Vertex, 36> cubeVertices = {

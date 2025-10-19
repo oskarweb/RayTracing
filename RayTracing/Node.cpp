@@ -1,6 +1,6 @@
-#include "Node.h"
+#include "Node.hpp"
 
-void Node::setRenderer(Renderer* renderer)
+void Node::setRenderer(Renderer *renderer)
 {
 	rendererHandle = renderer;
 }

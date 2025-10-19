@@ -5,7 +5,7 @@
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
 
-#include "Input.h"
+#include "Input.hpp"
 
 class Camera {
 public:

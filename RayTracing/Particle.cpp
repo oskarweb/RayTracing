@@ -1,4 +1,4 @@
-#include "Particle.h"
+#include "Particle.hpp"
 
 Particle::Particle() :
 	m_charge(0.0),

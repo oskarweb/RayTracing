@@ -1,4 +1,4 @@
-#include "ChargedCuboid.h"
+#include "ChargedCuboid.hpp"
 
 void ChargedCuboid::cleanup()
 {

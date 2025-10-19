@@ -7,24 +7,24 @@
 #include <string>
 #include <filesystem>
 
-#include "Vertex.h"
-#include "extras.h"
+#include "Vertex.hpp"
+#include "extras.hpp"
 
 struct PipelineCreateInfo
 {
-    VkDevice& device;
-    VkRenderPass& renderPass;
-    VkDescriptorSetLayout& descriptorSetLayout;
-    VkSampleCountFlagBits& msaaSamples;
+    VkDevice device;
+    VkRenderPass renderPass;
+    VkDescriptorSetLayout descriptorSetLayout;
+    VkSampleCountFlagBits msaaSamples;
 };
 
 class PipelineFactory
 {
 protected:
-	VkDevice& m_device;
-	VkPhysicalDevice& m_physicalDevice;
+	VkDevice m_device;
+	VkPhysicalDevice m_physicalDevice;
 public:
-	PipelineFactory(VkDevice& device, VkPhysicalDevice& physicalDevice) : m_device(device), m_physicalDevice(physicalDevice) {}
+	PipelineFactory(VkDevice device, VkPhysicalDevice physicalDevice) : m_device(device), m_physicalDevice(physicalDevice) {}
     virtual std::pair<VkPipeline, VkPipelineLayout> create(PipelineCreateInfo info) = 0;
 
 };

@@ -7,9 +7,9 @@
 
 #include <map>
 
-#include "Renderer.h"
-#include "RendererStructs.h"
-#include "extras.h"
+#include "Renderer.hpp"
+#include "RendererStructs.hpp"
+#include "extras.hpp"
 
 
 inline void printVec3(glm::vec3& vec, const std::string& name = "")
@@ -207,10 +207,6 @@ struct AxesModel : Model
 
 	AxesModel(glm::vec3 _pos) : Model(_pos)
 	{
-		for (auto info : renderableInfos)
-		{
-			std::cout << info.renderableName << std::endl;
-		}
 		renderableInfos = std::vector<RenderableInfo>
 		{
 			RenderableInfo{

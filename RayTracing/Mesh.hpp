@@ -11,14 +11,14 @@
 #include <filesystem>
 #include <iostream>
 
-#include "Vertex.h"
-#include "extras.h"
+#include "Vertex.hpp"
+#include "extras.hpp"
 
 struct Mesh
 {
 	std::string name = "default";
-	std::vector<Vertex> m_vertices;
-	std::vector<uint32_t> m_indices;
+	std::vector<Vertex> m_vertices{};
+	std::vector<uint32_t> m_indices{};
 	std::unordered_map<Vertex, uint32_t> m_uniqueVertices{};
 
 	VkDevice m_deviceHandle = VK_NULL_HANDLE;

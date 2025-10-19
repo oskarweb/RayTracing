@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Node.h"
-#include "extras.h"
+#include "Node.hpp"
+#include "extras.hpp"
 
 class ChargedCuboid : public Node
 {

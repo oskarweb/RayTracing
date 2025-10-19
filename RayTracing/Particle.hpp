@@ -8,11 +8,11 @@
 #include <thread>
 #include <mutex>
 
-#include "RendererStructs.h"
-#include "Models.h"
-#include "Node.h"
-#include "extras.h"
-#include "Trail.h"
+#include "RendererStructs.hpp"
+#include "Models.hpp"
+#include "Node.hpp"
+#include "extras.hpp"
+#include "Trail.hpp"
 
 class Particle : public Node
 {
