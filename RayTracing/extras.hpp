@@ -6,7 +6,7 @@
 
 #include <glm/glm.hpp>
 
-#include "imgui.h"
+// #include "imgui.h"
 
 #include <fstream>
 #include <cstdint>
@@ -55,11 +55,11 @@ namespace Types
 
 	inline constexpr double operator*(const Vec3d& v) { return v.x + v.y + v.z; }
 
-    struct ImGuiWindowInfo
-    {
-		ImVec2 size;
-		ImVec2 pos;
-    };
+    // struct ImGuiWindowInfo
+    // {
+	// 	ImVec2 size;
+	// 	ImVec2 pos;
+    // };
 
     enum class OdeMethod
     {
@@ -147,7 +147,14 @@ namespace Helpers
         throw std::runtime_error("failed to find suitable memory type!");
     }
 
-    inline void createBuffer(VkDevice device, VkPhysicalDevice physicalDevice, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
+    inline void createBuffer(    
+        VmaAllocator allocator,
+        VkDeviceSize size,
+        VkBufferUsageFlags usage,
+        VmaMemoryUsage allocUsage,
+        VmaAllocationCreateFlags allocFlags,
+        VkBuffer& buffer,
+        VmaAllocation& allocation)
     {
         VkBufferCreateInfo bufferInfo{};
         bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -155,23 +162,13 @@ namespace Helpers
         bufferInfo.usage = usage;
         bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-        if (vkCreateBuffer(device, &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
-            throw std::runtime_error("failed to create buffer!");
+        VmaAllocationCreateInfo allocInfo{};
+        allocInfo.usage = allocUsage;
+        allocInfo.flags = allocFlags;
+
+        if (vmaCreateBuffer(allocator, &bufferInfo, &allocInfo, &buffer, &allocation, nullptr) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create buffer with VMA!");
         }
-
-        VkMemoryRequirements memRequirements;
-        vkGetBufferMemoryRequirements(device, buffer, &memRequirements);
-
-        VkMemoryAllocateInfo allocInfo{};
-        allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        allocInfo.allocationSize = memRequirements.size;
-        allocInfo.memoryTypeIndex = findMemoryType(physicalDevice, memRequirements.memoryTypeBits, properties);
-
-        if (vkAllocateMemory(device, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS) {
-            throw std::runtime_error("failed to allocate buffer memory!");
-        }
-
-        vkBindBufferMemory(device, buffer, bufferMemory, 0);
     }
 
     inline VkCommandBuffer beginSingleTimeCommands(VkDevice device, VkCommandPool commandPool) {

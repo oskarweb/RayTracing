@@ -10,14 +10,14 @@ class Input
 public:
 	struct Key
 	{
-		bool pressed;
-		bool justPressed;
+		bool pressed = false;
+		bool justPressed = false;
 	};
 
 	struct Point
 	{
-		double x;
-		double y;
+		double x = 0.0F;
+		double y = 0.0F;
 	};
 
 	inline static std::map<int, Key> keyStates =

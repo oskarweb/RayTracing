@@ -1,0 +1,4 @@
+#define VMA_IMPLEMENTATION
+#define VMA_DEBUG_MARGIN 16
+#define VMA_DEBUG_DETECT_CORRUPTION 1
+#include "vk_mem_alloc.h"

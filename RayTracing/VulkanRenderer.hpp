@@ -2,17 +2,19 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+#include "vma/vk_mem_alloc.h"
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/hash.hpp>
 
-#include "tiny_obj_loader.h"
+// #include "tiny_obj_loader.h"
 
-#include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_vulkan.h"
+// #include "imgui.h"
+// #include "imgui_impl_glfw.h"
+// #include "imgui_impl_vulkan.h"
 
-#include "implot.h"
+// #include "implot.h"
 
 #include <iostream>
 #include <unordered_map>
@@ -37,20 +39,14 @@ class VulkanRenderer : public Renderer
 public:
 	constexpr const static int MAX_FRAMES_IN_FLIGHT = 3;
 
-	void setCamera(Camera* camera)
-	{
-		m_cameraPtr = camera;
-	}
+	VulkanRenderer() = default;
 
-	void setWindow(GLFWwindow* window)
-	{
-		m_window = window;
-		glfwSetFramebufferSizeCallback(m_window, framebufferResizeCallback);
-	}
+	void setCamera(Camera* camera) { m_cameraPtr = camera; }
+	void setWindow(GLFWwindow* window) { m_window = window; }
 
 	void init();
 	void newFrame();
-	void recordImguiData(ImDrawData* data);
+	// void recordImguiData(ImDrawData* data);
 	Material* getMaterial(const std::string& name);
 	Mesh* getMesh(const std::string& name);
 	std::multimap<std::string, Renderable, RenderableComp>::iterator addRenderable(Renderable renderable) override;
@@ -61,12 +57,14 @@ public:
 	const int& getFramebufferHeight() const { return m_frameBufferHeight; }
 	const double& getDeltaTime() const { return m_deltaTime; }
 	double getDeltaTimeS() const { return m_deltaTime / 1000.0; }
+	void notifyFramebufferResized() { m_framebufferResized = true; }
 private:
-	void initImplVulkanImGui();
-	void initImgui();
+	// void initImplVulkanImGui();
+	// void initImgui();
 	void cleanupSyncObjects();
 	void cleanupSwapChain(bool recreate);
 	void recreateSwapChain();
+	void createAllocator();
 	void createInstance();
 	void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
 	void setupDebugMessenger();
@@ -83,11 +81,11 @@ private:
 	void createDepthResources();
 	VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
 	VkFormat findDepthFormat();
-	void createTextureImage(Texture& texture, std::filesystem::path& path);
+	// void createTextureImage(Texture& texture, std::filesystem::path& path);
 	void generateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels);
 	VkSampleCountFlagBits getMaxUsableSampleCount();
 	void createTextureImageView(VkImageView& textureImageView, VkImage& textureImage);
-	void createTextureSampler();
+	// void createTextureSampler();
 	VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels);
 	void createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, Image& image);
 	void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels);
@@ -123,6 +121,9 @@ private:
 
 	Camera* m_cameraPtr = nullptr;
 	GLFWwindow* m_window = nullptr;
+
+	VmaAllocator m_allocator{};
+
 	VkInstance m_instance = VK_NULL_HANDLE;
 	VkDebugUtilsMessengerEXT m_debugMessenger = VK_NULL_HANDLE;
 	VkSurfaceKHR m_surface = VK_NULL_HANDLE;
@@ -131,14 +132,13 @@ private:
 	VkQueue m_graphicsQueue = VK_NULL_HANDLE;
 	VkQueue m_presentQueue = VK_NULL_HANDLE;
 
+	VkSwapchainKHR m_swapChain = VK_NULL_HANDLE;
 	VkSwapchainKHR m_prevSwapChain = VK_NULL_HANDLE;
 	std::vector<VkImage> m_swapChainImages{};
 	VkFormat m_swapChainImageFormat{};
 	VkExtent2D m_swapChainExtent{};
 	std::vector<VkImageView> m_swapChainImageViews{};
 	std::vector<VkFramebuffer> m_swapChainFramebuffers{};
-
-	VkSwapchainKHR m_swapChain = VK_NULL_HANDLE;
 
 	VkRenderPass m_renderPass = VK_NULL_HANDLE;
 	VkDescriptorSetLayout m_descriptorSetLayout = VK_NULL_HANDLE;
@@ -150,13 +150,13 @@ private:
 	std::vector<VkSemaphore> m_renderFinishedSemaphores{};
 	std::vector<VkFence> m_inFlightFences{};
 	std::vector<VkFence> m_imagesInFlight{};
-
+			
 	uint32_t m_currentFrame = 0;
 
 	std::vector<VkBuffer> m_uniformBuffers{};
-	std::vector<VkDeviceMemory> m_uniformBuffersMemory{};
+	std::vector<VmaAllocation> m_uniformBuffersAlloc{};
 	std::vector<void*> m_uniformBuffersMapped{};
-
+	bool m_framebufferResized = false;
 	VkDescriptorPool m_descriptorPool = VK_NULL_HANDLE;
 	std::vector<VkDescriptorSet> m_descriptorSets{};
 
@@ -165,18 +165,31 @@ private:
 
 	Image m_depthImage{};
 	VkImageView m_depthImageView = VK_NULL_HANDLE;
-
+	//bool m_framebufferResized = false;
 	Image m_colorImage{};
 	VkImageView m_colorImageView = VK_NULL_HANDLE;
 
 	VkSampleCountFlagBits m_msaaSamples = VK_SAMPLE_COUNT_1_BIT;
-
+	void printAllHandles() {
+		std::cout << "m_instance           " << m_instance           << '\n';
+		std::cout << "m_debugMessenger     " << m_debugMessenger     << '\n';
+		std::cout << "m_surface            " << m_surface            << '\n';
+		std::cout << "m_physicalDevice     " << m_physicalDevice     << '\n';
+		std::cout << "m_device             " << m_device             << '\n';
+		std::cout << "m_graphicsQueue      " << m_graphicsQueue      << '\n';
+		std::cout << "m_presentQueue       " << m_presentQueue       << '\n';
+		std::cout << "m_swapChain          " << m_swapChain          << '\n';
+		std::cout << "m_prevSwapChain      " << m_prevSwapChain      << '\n';
+		std::cout << "m_renderPass         " << m_renderPass         << '\n';
+		std::cout << "m_descriptorSetLayout" << m_descriptorSetLayout << '\n';
+		std::cout << "m_commandPool        " << m_commandPool        << '\n';
+		std::cout << "m_descriptorPool     " << m_descriptorPool     << '\n';			
+	}
 	int m_framebufferWidth = Constants::WIDTH;
 	int m_frameBufferHeight = Constants::HEIGHT;
-	volatile bool m_framebufferResized = false;
 
 	VkDescriptorPool m_imguiDescriptorPool = VK_NULL_HANDLE;
-	std::array<ImDrawData*, MAX_FRAMES_IN_FLIGHT> m_imguiDrawData{nullptr};
+	// std::vector<ImDrawData*> m_imguiDrawData{};
 
 	std::chrono::time_point<std::chrono::high_resolution_clock> m_lastFrameTime{};
 	double m_deltaTime = 0.0;

@@ -1,16 +1,16 @@
 ﻿#pragma once
 
-#include <format>
-#include <functional>
-#include <thread>
-#include <mutex>
-
 #include "VulkanRenderer.hpp"
 #include "Camera.hpp"
 #include "Input.hpp"
 #include "Models.hpp"
 #include "Particle.hpp"
-#include "ChargedCuboid.hpp"
+
+#include <condition_variable>
+#include <format>
+#include <functional>
+#include <thread>
+#include <mutex>
 
 class Simulation
 {
@@ -60,6 +60,8 @@ public:
 	};
 
 private:
+	static inline void framebufferResizeCallback(GLFWwindow* window, int width, int height);
+
 	void updateStatic();
 	void updateAllPrecalc();
 	void update20MsPecalc();
@@ -110,7 +112,6 @@ private:
 	Types::OdeMethod m_method = Types::OdeMethod::RK4;
 
 	std::vector<Particle> m_particles;
-	std::vector<ChargedCuboid> m_cuboids; // Possibly implement charged volume abstract class
 
 	bool m_skipUpdate = true;
 	std::atomic<bool> m_paused = true;
@@ -133,13 +134,13 @@ private:
 	// GUI
 	std::vector<Particle>::iterator m_plotSelectedParticle;
 
-	inline static constexpr const ImVec2 START_BUTTON_SIZE = ImVec2(148, 40);
-	inline static constexpr const ImVec2 PRESET1_BUTTON_SIZE = ImVec2(70, 30);
-	inline static constexpr const ImVec2 SET_INIT_STATE_BUTTON_SIZE = ImVec2(148, 25);
-	Types::ImGuiWindowInfo m_mainCtrlWindowInfo = { MAIN_CTRL_WINDOW_MIN_SIZE, ImVec2(0, 0) };
-	Types::ImGuiWindowInfo m_particleListWindowInfo = { PARTICLE_LIST_WINDOW_MIN_SIZE, ImVec2(0, 0) };
-	Types::ImGuiWindowInfo m_particleAddWindowInfo = { PARTICLE_ADD_WINDOW_MIN_SIZE, ImVec2(0, 0) };
-	Types::ImGuiWindowInfo m_plotWindowInfo = { PLOT_WINDOW_MIN_SIZE, ImVec2(0, 0) };
+	// inline static constexpr const ImVec2 START_BUTTON_SIZE = ImVec2(148, 40);
+	// inline static constexpr const ImVec2 PRESET1_BUTTON_SIZE = ImVec2(70, 30);
+	// inline static constexpr const ImVec2 SET_INIT_STATE_BUTTON_SIZE = ImVec2(148, 25);
+	// Types::ImGuiWindowInfo m_mainCtrlWindowInfo = { MAIN_CTRL_WINDOW_MIN_SIZE, ImVec2(0, 0) };
+	// Types::ImGuiWindowInfo m_particleListWindowInfo = { PARTICLE_LIST_WINDOW_MIN_SIZE, ImVec2(0, 0) };
+	// Types::ImGuiWindowInfo m_particleAddWindowInfo = { PARTICLE_ADD_WINDOW_MIN_SIZE, ImVec2(0, 0) };
+	// Types::ImGuiWindowInfo m_plotWindowInfo = { PLOT_WINDOW_MIN_SIZE, ImVec2(0, 0) };
 	
 	// CONSTANTS
 	inline static constexpr const int BACKWARD_EULER_ITERS = 20;
@@ -149,10 +150,10 @@ private:
 	inline static constexpr const uint32_t STEPS_BUFFERED_AT_ONCE = 1000;
 	inline static constexpr const uint32_t NUM_THREADS = 2;
 	inline static constexpr const float WINDOWS_BG_ALPHA = 0.50f;
-	inline static constexpr const ImVec2 MAIN_CTRL_WINDOW_MIN_SIZE = ImVec2(400, 450);
-	inline static constexpr const ImVec2 PARTICLE_LIST_WINDOW_MIN_SIZE = ImVec2(600, 100);
-	inline static constexpr const ImVec2 PARTICLE_ADD_WINDOW_MIN_SIZE = ImVec2(280, 200);
-	inline static constexpr const ImVec2 PLOT_WINDOW_MIN_SIZE = ImVec2(400, 400);
+	// inline static constexpr const ImVec2 MAIN_CTRL_WINDOW_MIN_SIZE = ImVec2(400, 450);
+	// inline static constexpr const ImVec2 PARTICLE_LIST_WINDOW_MIN_SIZE = ImVec2(600, 100);
+	// inline static constexpr const ImVec2 PARTICLE_ADD_WINDOW_MIN_SIZE = ImVec2(280, 200);
+	// inline static constexpr const ImVec2 PLOT_WINDOW_MIN_SIZE = ImVec2(400, 400);
 	inline static constexpr const double SLIDER_MIN_AFFECTING_FORCE = -2.0;
 	inline static constexpr const double SLIDER_MAX_AFFECTING_FORCE = 2.0;
 	inline static constexpr const double SLIDER_MIN_POS = 0.0;
@@ -195,81 +196,87 @@ private:
 	};
 };
 
+void Simulation::framebufferResizeCallback(GLFWwindow* window, int width, int height) 
+{
+    Simulation* app = static_cast<Simulation*>(glfwGetWindowUserPointer(window));
+    app->m_rendererHandle->notifyFramebufferResized();
+}
+
 std::string Simulation::particleHeaderText(const Particle& particle)
 {
 	return std::format("Particle {}", particle.getId());
 }
 
-void Simulation::displayPresetButtons()
-{
-	if (ImGui::Button("Preset1"))
-	{
-		for (const auto& config : PARTICLE_PRESET1)
-		{
-			addParticle(Particle(
-				config.charge,
-				config.mass,
-				config.movable,
-				config.pos,
-				config.velocity,
-				m_method
-			));
-		}
-	}
-	if (ImGui::Button("Preset2"))
-	{
-		for (const auto& config : PARTICLE_PRESET2)
-		{
-			addParticle(Particle(
-				config.charge,
-				config.mass,
-				config.movable,
-				config.pos,
-				config.velocity,
-				m_method
-			));
-		}
-	}
-	if (ImGui::Button("Preset3"))
-	{
-		for (const auto& config : PARTICLE_PRESET3)
-		{
-			addParticle(Particle(
-				config.charge,
-				config.mass,
-				config.movable,
-				config.pos,
-				config.velocity,
-				m_method
-			));
-		}
-	}
-	if (ImGui::Button("Preset4"))
-	{
-		for (const auto& config : PARTICLE_PRESET4)
-		{
-			addParticle(Particle(
-				config.charge,
-				config.mass,
-				config.movable,
-				config.pos,
-				config.velocity,
-				m_method
-			));
-		}
-	}
-	if (ImGui::Button("Preset5"))
-	{
-		for (const auto& config : PARTICLE_PRESET5)
-		{
-			addParticle(Particle(
-				config.charge,
-				config.mass,
-				config.movable,
-				config.pos,
-				config.velocity,
-				m_method
-			));
-		}
-	}
-}
+// void Simulation::displayPresetButtons()
+// {
+// 	if (ImGui::Button("Preset1"))
+// 	{
+// 		for (const auto& config : PARTICLE_PRESET1)
+// 		{
+// 			addParticle(Particle(
+// 				config.charge,
+// 				config.mass,
+// 				config.movable,
+// 				config.pos,
+// 				config.velocity,
+// 				m_method
+// 			));
+// 		}
+// 	}
+// 	if (ImGui::Button("Preset2"))
+// 	{
+// 		for (const auto& config : PARTICLE_PRESET2)
+// 		{
+// 			addParticle(Particle(
+// 				config.charge,
+// 				config.mass,
+// 				config.movable,
+// 				config.pos,
+// 				config.velocity,
+// 				m_method
+// 			));
+// 		}
+// 	}
+// 	if (ImGui::Button("Preset3"))
+// 	{
+// 		for (const auto& config : PARTICLE_PRESET3)
+// 		{
+// 			addParticle(Particle(
+// 				config.charge,
+// 				config.mass,
+// 				config.movable,
+// 				config.pos,
+// 				config.velocity,
+// 				m_method
+// 			));
+// 		}
+// 	}
+// 	if (ImGui::Button("Preset4"))
+// 	{
+// 		for (const auto& config : PARTICLE_PRESET4)
+// 		{
+// 			addParticle(Particle(
+// 				config.charge,
+// 				config.mass,
+// 				config.movable,
+// 				config.pos,
+// 				config.velocity,
+// 				m_method
+// 			));
+// 		}
+// 	}
+// 	if (ImGui::Button("Preset5"))
+// 	{
+// 		for (const auto& config : PARTICLE_PRESET5)
+// 		{
+// 			addParticle(Particle(
+// 				config.charge,
+// 				config.mass,
+// 				config.movable,
+// 				config.pos,
+// 				config.velocity,
+// 				m_method
+// 			));
+// 		}
+// 	}
+// }

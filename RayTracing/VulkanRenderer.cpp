@@ -1,14 +1,15 @@
 ﻿#include "VulkanRenderer.hpp"
 
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
+// #define STB_IMAGE_IMPLEMENTATION
+// #include <stb_image.h>
 
-#define TINYOBJLOADER_IMPLEMENTATION
-#include "tiny_obj_loader.h"
+// #define TINYOBJLOADER_IMPLEMENTATION
+// #include "tiny_obj_loader.h"
 
 #include <iostream>
 #include <stdexcept>
 #include <cstdlib>
+#include <cstring>
 #include <vector>
 #include <optional>
 #include <set>
@@ -24,14 +25,8 @@
 #ifdef NDEBUG
 const bool enableValidationLayers = true;
 #else
-const bool enableValidationLayers = true;
+const bool enableValidationLayers = false;
 #endif
-
-void VulkanRenderer::framebufferResizeCallback(GLFWwindow* window, int width, int height) 
-{
-    VulkanRenderer* app = reinterpret_cast<VulkanRenderer*>(glfwGetWindowUserPointer(window));
-    app->m_framebufferResized = true;
-}
 
 void VulkanRenderer::recreateSwapChain()
 {
@@ -45,10 +40,10 @@ void VulkanRenderer::recreateSwapChain()
     }
     vkDeviceWaitIdle(m_device);
 
-    ImGui_ImplVulkan_Shutdown();
+    // ImGui_ImplVulkan_Shutdown();
     m_prevSwapChain = m_swapChain;
 
-    cleanupSwapChain(true);
+    cleanupSwapChain(false);
     cleanupSyncObjects();
 
     createSwapChain();
@@ -58,20 +53,28 @@ void VulkanRenderer::recreateSwapChain()
     createColorResources();
     createDepthResources();
     createFramebuffers();
+    // createUniformBuffers();
     createSyncObjects();
 
-    initImplVulkanImGui();
+    // initImplVulkanImGui();
 }
 
-void VulkanRenderer::cleanupSwapChain(bool recreate)
+void VulkanRenderer::cleanupSwapChain(bool hard)
 {
     vkDestroyImageView(m_device, m_depthImageView, nullptr);
-    vkDestroyImage(m_device, m_depthImage.image, nullptr);
-    vkFreeMemory(m_device, m_depthImage.imageMemory, nullptr);
+    vmaDestroyImage(m_allocator, m_depthImage.data, m_depthImage.allocation);
+    m_depthImage.data = VK_NULL_HANDLE;
+    m_depthImage.allocation = {};
 
     vkDestroyImageView(m_device, m_colorImageView, nullptr);
-    vkDestroyImage(m_device, m_colorImage.image, nullptr);
-    vkFreeMemory(m_device, m_colorImage.imageMemory, nullptr);
+    vmaDestroyImage(m_allocator, m_colorImage.data, m_colorImage.allocation);
+    m_colorImage.data = VK_NULL_HANDLE;
+    m_colorImage.allocation = {};
+
+    // for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) 
+    // {
+    //     vmaDestroyBuffer(m_allocator, m_uniformBuffers[i], m_uniformBuffersAlloc[i]);
+    // }
 
     for (auto framebuffer : m_swapChainFramebuffers)
     {
@@ -83,7 +86,7 @@ void VulkanRenderer::cleanupSwapChain(bool recreate)
         vkDestroyImageView(m_device, imageView, nullptr);
     }
 
-    if (!recreate)
+    if (hard)
     {
         vkDestroySwapchainKHR(m_device, m_swapChain, nullptr);
     }
@@ -154,6 +157,7 @@ void VulkanRenderer::init()
     createSurface();
     pickPhysicalDevice();
     createLogicalDevice();
+    createAllocator();
     createSwapChain();
     createImageViews();
     createRenderPass();
@@ -169,77 +173,89 @@ void VulkanRenderer::init()
     createColorResources();
     createDepthResources();
     createFramebuffers();
-    createTextureSampler();
+    // createTextureSampler();
     m_meshes.emplace("pyramid", Mesh("pyramid", m_device));
 	m_meshes["pyramid"].fromVertices(pyramidVertices.data(), pyramidVertices.size());
-	m_meshes["pyramid"].upload(m_physicalDevice, m_graphicsQueue, m_commandPool);
+	m_meshes["pyramid"].upload(m_allocator, m_graphicsQueue, m_commandPool);
 	m_meshes.emplace("cube", Mesh("cube", m_device));
 	m_meshes["cube"].fromVertices(cubeVertices.data(), cubeVertices.size());
-	m_meshes["cube"].upload(m_physicalDevice, m_graphicsQueue, m_commandPool);
+	m_meshes["cube"].upload(m_allocator, m_graphicsQueue, m_commandPool);
     m_meshes.emplace("xAxis", Mesh("xAxis", m_device));
     m_meshes["xAxis"].fromVertices(xAxisVertices.data(), xAxisVertices.size());
-    m_meshes["xAxis"].upload(m_physicalDevice, m_graphicsQueue, m_commandPool);
+    m_meshes["xAxis"].upload(m_allocator, m_graphicsQueue, m_commandPool);
     m_meshes.emplace("yAxis", Mesh("yAxis", m_device));
     m_meshes["yAxis"].fromVertices(yAxisVertices.data(), yAxisVertices.size());
-    m_meshes["yAxis"].upload(m_physicalDevice, m_graphicsQueue, m_commandPool);
+    m_meshes["yAxis"].upload(m_allocator, m_graphicsQueue, m_commandPool);
     m_meshes.emplace("zAxis", Mesh("zAxis", m_device));
     m_meshes["zAxis"].fromVertices(zAxisVertices.data(), zAxisVertices.size());
-    m_meshes["zAxis"].upload(m_physicalDevice, m_graphicsQueue, m_commandPool);
+    m_meshes["zAxis"].upload(m_allocator, m_graphicsQueue, m_commandPool);
 	m_meshes.emplace("redline", Mesh("redline", m_device));
     m_meshes["redline"].fromVertices(redLineVertices.data(), redLineVertices.size());
-	m_meshes["redline"].upload(m_physicalDevice, m_graphicsQueue, m_commandPool);
+	m_meshes["redline"].upload(m_allocator, m_graphicsQueue, m_commandPool);
     m_meshes.emplace("yellowline", Mesh("yellowline", m_device));
     m_meshes["yellowline"].fromVertices(yellowLineVertices.data(), yellowLineVertices.size());
-    m_meshes["yellowline"].upload(m_physicalDevice, m_graphicsQueue, m_commandPool);
+    m_meshes["yellowline"].upload(m_allocator, m_graphicsQueue, m_commandPool);
     m_meshes.emplace("greenline", Mesh("greenline", m_device));
     m_meshes["greenline"].fromVertices(greenLineVertices.data(), greenLineVertices.size());
-    m_meshes["greenline"].upload(m_physicalDevice, m_graphicsQueue, m_commandPool);
+    m_meshes["greenline"].upload(m_allocator, m_graphicsQueue, m_commandPool);
     createUniformBuffers();
     createDescriptorPool();
     createDescriptorSets();
     createCommandBuffers();
     createSyncObjects();
-    initImgui();
+    // initImgui();
 }
 
-void VulkanRenderer::initImplVulkanImGui()
-{
-    ImGui_ImplVulkan_InitInfo initInfo = {};
-    initInfo.Instance = m_instance;
-    initInfo.PhysicalDevice = m_physicalDevice;
-    initInfo.Device = m_device;
-    initInfo.Queue = m_graphicsQueue;
-    initInfo.DescriptorPool = m_imguiDescriptorPool;
-    initInfo.MinImageCount = static_cast<uint32_t>(m_swapChainImages.size());
-    initInfo.ImageCount = static_cast<uint32_t>(m_swapChainImages.size());
-	initInfo.RenderPass = m_renderPass;
-    initInfo.MSAASamples = m_msaaSamples;
-    initInfo.Allocator = nullptr;
-    ImGui_ImplVulkan_Init(&initInfo);
-}
+// void VulkanRenderer::initImplVulkanImGui()
+// {
+//     ImGui_ImplVulkan_InitInfo initInfo = {};
+//     initInfo.Instance = m_instance;
+//     initInfo.PhysicalDevice = m_physicalDevice;
+//     initInfo.Device = m_device;
+//     initInfo.Queue = m_graphicsQueue;
+//     initInfo.DescriptorPool = m_imguiDescriptorPool;
+//     initInfo.MinImageCount = static_cast<uint32_t>(m_swapChainImages.size());
+//     initInfo.ImageCount = static_cast<uint32_t>(m_swapChainImages.size());
+// 	initInfo.RenderPass = m_renderPass;
+//     initInfo.MSAASamples = m_msaaSamples;
+//     initInfo.Allocator = nullptr;
+//     ImGui_ImplVulkan_Init(&initInfo);
+// }
 
-void VulkanRenderer::initImgui()
-{
-    VkDescriptorPoolSize poolSizes[] =
-    {
-        { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1 },
-    };
-    VkDescriptorPoolCreateInfo poolInfo = {};
-    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-    poolInfo.maxSets = 1;
-    poolInfo.poolSizeCount = (uint32_t)IM_ARRAYSIZE(poolSizes);
-    poolInfo.pPoolSizes = poolSizes;
+// void VulkanRenderer::initImgui()
+// {
+//     m_imguiDrawData.resize(MAX_FRAMES_IN_FLIGHT, nullptr);
 
-    if (vkCreateDescriptorPool(m_device, &poolInfo, nullptr, &m_imguiDescriptorPool) != VK_SUCCESS) 
-    {
-        throw std::runtime_error("failed to create descriptor pool!");
-    }
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImPlot::CreateContext();
-    ImGui_ImplGlfw_InitForVulkan(m_window, true);
-    initImplVulkanImGui();
+//     VkDescriptorPoolSize poolSizes[] =
+//     {
+//         { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1 },
+//     };
+//     VkDescriptorPoolCreateInfo poolInfo = {};
+//     poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+//     poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+//     poolInfo.maxSets = 1;
+//     poolInfo.poolSizeCount = (uint32_t)IM_ARRAYSIZE(poolSizes);
+//     poolInfo.pPoolSizes = poolSizes;
+
+//     if (vkCreateDescriptorPool(m_device, &poolInfo, nullptr, &m_imguiDescriptorPool) != VK_SUCCESS) 
+//     {
+//         throw std::runtime_error("failed to create descriptor pool!");
+//     }
+//     IMGUI_CHECKVERSION();
+//     ImGui::CreateContext();
+//     ImPlot::CreateContext();
+//     ImGui_ImplGlfw_InitForVulkan(m_window, true);
+//     initImplVulkanImGui();
+// }
+
+void VulkanRenderer::createAllocator() 
+{
+    VmaAllocatorCreateInfo allocatorInfo = {};
+    allocatorInfo.physicalDevice = m_physicalDevice;
+    allocatorInfo.device = m_device;
+    allocatorInfo.instance = m_instance;
+
+    vmaCreateAllocator(&allocatorInfo, &m_allocator);
 }
 
 void VulkanRenderer::createColorResources() {
@@ -255,7 +271,7 @@ void VulkanRenderer::createColorResources() {
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
         m_colorImage
     );
-    m_colorImageView = createImageView(m_colorImage.image, colorFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
+    m_colorImageView = createImageView(m_colorImage.data, colorFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
 }
 
 void VulkanRenderer::createDepthResources()
@@ -272,7 +288,7 @@ void VulkanRenderer::createDepthResources()
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
         m_depthImage
     );
-    m_depthImageView = createImageView(m_depthImage.image, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, 1);
+    m_depthImageView = createImageView(m_depthImage.data, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, 1);
 }
 
 VkSampleCountFlagBits VulkanRenderer::getMaxUsableSampleCount() {
@@ -384,86 +400,86 @@ void VulkanRenderer::generateMipmaps(VkImage image, VkFormat imageFormat, int32_
     Helpers::endSingleTimeCommands(m_device, m_graphicsQueue, m_commandPool, commandBuffer);
 }
 
-void VulkanRenderer::createTextureImage(Texture& texture, std::filesystem::path& path) {
-    int texWidth, texHeight, texChannels;
-    stbi_uc* pixels = stbi_load(path.string().c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
-    VkDeviceSize imageSize = texWidth * texHeight * 4;
+// void VulkanRenderer::createTextureImage(Texture& texture, std::filesystem::path& path) {
+//     int texWidth, texHeight, texChannels;
+//     stbi_uc* pixels = stbi_load(path.string().c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+//     VkDeviceSize imageSize = texWidth * texHeight * 4;
 
-    if (!pixels) {
-        throw std::runtime_error("failed to load texture image!");
-    }
+//     if (!pixels) {
+//         throw std::runtime_error("failed to load texture image!");
+//     }
 
-    m_mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
+//     m_mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
 
-    VkBuffer stagingBuffer;
-    VkDeviceMemory stagingBufferMemory;
-    Helpers::createBuffer(
-        m_device,
-        m_physicalDevice,
-        imageSize,
-        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-        stagingBuffer,
-        stagingBufferMemory
-    );
+//     VkBuffer stagingBuffer;
+//     VkDeviceMemory stagingBufferMemory;
+//     Helpers::createBuffer(
+//         m_device,
+//         m_physicalDevice,
+//         imageSize,
+//         VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+//         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+//         stagingBuffer,
+//         stagingBufferMemory
+//     );
 
-    void* data;
-    vkMapMemory(m_device, stagingBufferMemory, 0, imageSize, 0, &data);
-    memcpy(data, pixels, static_cast<size_t>(imageSize));
-    vkUnmapMemory(m_device, stagingBufferMemory);
+//     void* data;
+//     vkMapMemory(m_device, stagingBufferMemory, 0, imageSize, 0, &data);
+//     memcpy(data, pixels, static_cast<size_t>(imageSize));
+//     vkUnmapMemory(m_device, stagingBufferMemory);
 
-    stbi_image_free(pixels);
+//     stbi_image_free(pixels);
 
-    createImage(
-        texWidth,
-        texHeight,
-        m_mipLevels,
-        VK_SAMPLE_COUNT_1_BIT,
-        VK_FORMAT_R8G8B8A8_SRGB,
-        VK_IMAGE_TILING_OPTIMAL,
-        VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-        texture.image
-    );
+//     createImage(
+//         texWidth,
+//         texHeight,
+//         m_mipLevels,
+//         VK_SAMPLE_COUNT_1_BIT,
+//         VK_FORMAT_R8G8B8A8_SRGB,
+//         VK_IMAGE_TILING_OPTIMAL,
+//         VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+//         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+//         texture.image
+//     );
 
-    transitionImageLayout(texture.image.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, m_mipLevels);
-    copyBufferToImage(stagingBuffer, texture.image.image, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
-    //transitionImageLayout(m_textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, m_mipLevels);
+//     transitionImageLayout(texture.image.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, m_mipLevels);
+//     copyBufferToImage(stagingBuffer, texture.image.image, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+//     //transitionImageLayout(m_textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, m_mipLevels);
 
-    vkDestroyBuffer(m_device, stagingBuffer, nullptr);
-    vkFreeMemory(m_device, stagingBufferMemory, nullptr);
+//     vkDestroyBuffer(m_device, stagingBuffer, nullptr);
+//     vkFreeMemory(m_device, stagingBufferMemory, nullptr);
 
-    generateMipmaps(texture.image.image, VK_FORMAT_R8G8B8A8_SRGB, texWidth, texHeight, m_mipLevels);
-}
+//     generateMipmaps(texture.image.image, VK_FORMAT_R8G8B8A8_SRGB, texWidth, texHeight, m_mipLevels);
+// }
 
-void VulkanRenderer::createTextureSampler()
-{
-    VkPhysicalDeviceProperties properties{};
-    vkGetPhysicalDeviceProperties(m_physicalDevice, &properties);
+// void VulkanRenderer::createTextureSampler()
+// {
+//     VkPhysicalDeviceProperties properties{};
+//     vkGetPhysicalDeviceProperties(m_physicalDevice, &properties);
 
-    VkSamplerCreateInfo samplerInfo{};
-    samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-    samplerInfo.magFilter = VK_FILTER_LINEAR;
-    samplerInfo.minFilter = VK_FILTER_LINEAR;
-    samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-    samplerInfo.minLod = 0.0f; // Optional
-    samplerInfo.maxLod = static_cast<float>(m_mipLevels);
-    samplerInfo.mipLodBias = 0.0f; // Optional
-    samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    samplerInfo.anisotropyEnable = VK_TRUE;
-    samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
-    samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-    samplerInfo.unnormalizedCoordinates = VK_FALSE;
-    samplerInfo.compareEnable = VK_FALSE;
-    samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+//     VkSamplerCreateInfo samplerInfo{};
+//     samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+//     samplerInfo.magFilter = VK_FILTER_LINEAR;
+//     samplerInfo.minFilter = VK_FILTER_LINEAR;
+//     samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+//     samplerInfo.minLod = 0.0f; // Optional
+//     samplerInfo.maxLod = static_cast<float>(m_mipLevels);
+//     samplerInfo.mipLodBias = 0.0f; // Optional
+//     samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+//     samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+//     samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+//     samplerInfo.anisotropyEnable = VK_TRUE;
+//     samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
+//     samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+//     samplerInfo.unnormalizedCoordinates = VK_FALSE;
+//     samplerInfo.compareEnable = VK_FALSE;
+//     samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
 
-    if (vkCreateSampler(m_device, &samplerInfo, nullptr, &m_textureSampler) != VK_SUCCESS) 
-    {
-        throw std::runtime_error("failed to create texture sampler!");
-    }
-}
+//     if (vkCreateSampler(m_device, &samplerInfo, nullptr, &m_textureSampler) != VK_SUCCESS) 
+//     {
+//         throw std::runtime_error("failed to create texture sampler!");
+//     }
+// }
 
 void VulkanRenderer::createTextureImageView(VkImageView& textureImageView, VkImage& textureImage)
 {
@@ -509,25 +525,38 @@ void VulkanRenderer::createImage(uint32_t width, uint32_t height, uint32_t mipLe
     imageInfo.samples = numSamples;
     imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-    if (vkCreateImage(m_device, &imageInfo, nullptr, &image.image) != VK_SUCCESS)
-    {
-        throw std::runtime_error("failed to create image!");
-    }
+    VmaAllocationInfo allocInfo{};
 
-    VkMemoryRequirements memRequirements;
-    vkGetImageMemoryRequirements(m_device, image.image, &memRequirements);
+    VmaAllocationCreateInfo allocCreateInfo{};
+    allocCreateInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
-    VkMemoryAllocateInfo allocInfo{};
-    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    allocInfo.allocationSize = memRequirements.size;
-    allocInfo.memoryTypeIndex = Helpers::findMemoryType(m_physicalDevice, memRequirements.memoryTypeBits, properties);
+    // if (vkCreateImage(m_device, &imageInfo, nullptr, &image.image) != VK_SUCCESS)
+    // {
+    //     throw std::runtime_error("failed to create image!");
+    // }
 
-    if (vkAllocateMemory(m_device, &allocInfo, nullptr, &image.imageMemory) != VK_SUCCESS)
-    {
-        throw std::runtime_error("failed to allocate image memory!");
-    }
+    // VkMemoryRequirements memRequirements;
+    // vkGetImageMemoryRequirements(m_device, image.image, &memRequirements);
 
-    vkBindImageMemory(m_device, image.image, image.imageMemory, 0);
+    // VkMemoryAllocateInfo allocInfo{};
+    // allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    // allocInfo.allocationSize = memRequirements.size;
+    // allocInfo.memoryTypeIndex = Helpers::findMemoryType(m_physicalDevice, memRequirements.memoryTypeBits, properties);
+
+    // if (vkAllocateMemory(m_device, &allocInfo, nullptr, &image.imageMemory) != VK_SUCCESS)
+    // {
+    //     throw std::runtime_error("failed to allocate image memory!");
+    // }
+
+    // vkBindImageMemory(m_device, image.image, image.imageMemory, 0);
+    vmaCreateImage(
+        m_allocator,
+        &imageInfo,
+        &allocCreateInfo,
+        &image.data,
+        &image.allocation,
+        &allocInfo
+    );
 }
 
 void VulkanRenderer::transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels)
@@ -586,23 +615,36 @@ void VulkanRenderer::transitionImageLayout(VkImage image, VkFormat format, VkIma
 void VulkanRenderer::createUniformBuffers()
 {
     VkDeviceSize bufferSize = sizeof(CameraBuffer);
-
+    m_uniformBuffers.clear();
+    m_uniformBuffersMapped.clear();
+    m_uniformBuffersAlloc.clear();
+    
     m_uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
-    m_uniformBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
     m_uniformBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
+    m_uniformBuffersAlloc.resize(MAX_FRAMES_IN_FLIGHT);
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
     {
-        Helpers::createBuffer(
-            m_device,
-            m_physicalDevice, 
-            bufferSize, 
-            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, 
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 
-            m_uniformBuffers[i], 
-            m_uniformBuffersMemory[i]
+        VkBufferCreateInfo bufferInfo{};
+        bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        bufferInfo.size = bufferSize;
+        bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+        VmaAllocationCreateInfo allocInfo{};
+        allocInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
+        allocInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
+        VmaAllocationInfo vmaInfo{};
+
+
+        vmaCreateBuffer(
+            m_allocator,
+            &bufferInfo,
+            &allocInfo,
+            &m_uniformBuffers[i],
+            &m_uniformBuffersAlloc[i],
+            &vmaInfo
         );
-        vkMapMemory(m_device, m_uniformBuffersMemory[i], 0, bufferSize, 0, &m_uniformBuffersMapped[i]);
+           std::cout << vmaInfo.deviceMemory << " offset " << vmaInfo.offset << '\n';
+        m_uniformBuffersMapped[i] = vmaInfo.pMappedData;
     }
 }
 
@@ -620,6 +662,8 @@ void VulkanRenderer::createDescriptorSets() {
         throw std::runtime_error("failed to allocate descriptor sets!");
     }
 
+    return;
+
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         VkDescriptorBufferInfo bufferInfo{};
         bufferInfo.buffer = m_uniformBuffers[i];
@@ -628,16 +672,16 @@ void VulkanRenderer::createDescriptorSets() {
 
         std::vector<VkWriteDescriptorSet> descriptorWrites(1);
 
-        if (Constants::TEXTURE_COUNT > 0)
+        if constexpr (Constants::TEXTURE_COUNT > 0)
         {
             descriptorWrites.resize(3);
             std::vector<VkDescriptorImageInfo> imageInfos(Constants::TEXTURE_COUNT);
 
-            for (uint32_t i = 0; i < Constants::TEXTURE_COUNT; ++i)
+            for (uint32_t j = 0; j < Constants::TEXTURE_COUNT; ++j)
             {
-                imageInfos[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                imageInfos[i].imageView = m_textures[i].imageView;
-                imageInfos[i].sampler = m_textureSampler;
+                imageInfos[j].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                imageInfos[j].imageView = m_textures[j].imageView;
+                imageInfos[j].sampler = m_textureSampler;
             }
 
             descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -674,7 +718,7 @@ void VulkanRenderer::createDescriptorPool()
     std::vector<VkDescriptorPoolSize> poolSizes(1);
     poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-    if (Constants::TEXTURE_COUNT > 0)
+    if constexpr (Constants::TEXTURE_COUNT > 0)
     {
 		poolSizes.resize(3);
         poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -704,7 +748,7 @@ void VulkanRenderer::createDescriptorSetLayout()
     
     std::vector<VkDescriptorSetLayoutBinding> bindings = { uboLayoutBinding };
 
-    if (Constants::TEXTURE_COUNT > 0)
+    if constexpr (Constants::TEXTURE_COUNT > 0)
     {
         VkDescriptorSetLayoutBinding samplerLayoutBinding{};
         samplerLayoutBinding.binding = 1;
@@ -882,10 +926,10 @@ void VulkanRenderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t
     
 	drawObjects(commandBuffer);
 
-    if (m_imguiDrawData[m_currentFrame])
-    {
-        ImGui_ImplVulkan_RenderDrawData(m_imguiDrawData[m_currentFrame], commandBuffer);
-    }
+    // if (m_imguiDrawData[m_currentFrame])
+    // {
+    //     ImGui_ImplVulkan_RenderDrawData(m_imguiDrawData[m_currentFrame], commandBuffer);
+    // }
 
     vkCmdEndRenderPass(commandBuffer);
 
@@ -1011,6 +1055,7 @@ void VulkanRenderer::createRenderPass()
 
 void VulkanRenderer::createFramebuffers()
 {
+    m_swapChainFramebuffers.clear();
     m_swapChainFramebuffers.resize(m_swapChainImageViews.size());
 
     for (size_t i = 0; i < m_swapChainImageViews.size(); i++)
@@ -1038,6 +1083,7 @@ void VulkanRenderer::createFramebuffers()
 
 void VulkanRenderer::createImageViews()
 {
+    m_swapChainImageViews.clear();
     m_swapChainImageViews.resize(m_swapChainImages.size());
 
     for (uint32_t i = 0; i < m_swapChainImages.size(); i++) {
@@ -1280,7 +1326,6 @@ void VulkanRenderer::cleanupSyncObjects()
 
 void VulkanRenderer::cleanup()
 {
-    const size_t prevSwapchainImagesSize = m_swapChainImages.size();
     for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
     {
         vkWaitForFences(m_device, 1, &m_inFlightFences[i], VK_TRUE, UINT64_MAX);
@@ -1288,10 +1333,10 @@ void VulkanRenderer::cleanup()
 	vkQueueWaitIdle(m_graphicsQueue);
     vkDeviceWaitIdle(m_device);
 
-    ImGui_ImplVulkan_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImPlot::DestroyContext();
-    ImGui::DestroyContext();
+    // ImGui_ImplVulkan_Shutdown();
+    // ImGui_ImplGlfw_Shutdown();
+    // ImPlot::DestroyContext();
+    // ImGui::DestroyContext();
 
     cleanupSwapChain(false);
 
@@ -1311,8 +1356,7 @@ void VulkanRenderer::cleanup()
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) 
     {
-        vkDestroyBuffer(m_device, m_uniformBuffers[i], nullptr);
-        vkFreeMemory(m_device, m_uniformBuffersMemory[i], nullptr);
+        vmaDestroyBuffer(m_allocator, m_uniformBuffers[i], m_uniformBuffersAlloc[i]);
     }
 
     vkDestroyDescriptorPool(m_device, m_imguiDescriptorPool, nullptr);
@@ -1324,24 +1368,21 @@ void VulkanRenderer::cleanup()
     {
         if (texture.imageView != VK_NULL_HANDLE)
             vkDestroyImageView(m_device, texture.imageView, nullptr);
-        if (texture.image.image != VK_NULL_HANDLE)
-            vkDestroyImage(m_device, texture.image.image, nullptr);
-        if (texture.image.imageMemory != VK_NULL_HANDLE)
-            vkFreeMemory(m_device, texture.image.imageMemory, nullptr);
+        vmaDestroyImage(m_allocator, texture.image.data, texture.image.allocation);
     }
 
     vkDestroyDescriptorSetLayout(m_device, m_descriptorSetLayout, nullptr);
 
     for (auto& [name, mesh] : m_meshes)
     {
-       mesh.cleanup();
+       mesh.cleanup(m_allocator);
     }
 
     cleanupSyncObjects();
     
     vkFreeCommandBuffers(m_device, m_commandPool, static_cast<uint32_t>(m_commandBuffers.size()), m_commandBuffers.data());
     vkDestroyCommandPool(m_device, m_commandPool, nullptr);
-
+    vmaDestroyAllocator(m_allocator);
     vkDestroyDevice(m_device, nullptr);
 
     if (enableValidationLayers) 
@@ -1480,6 +1521,16 @@ VkExtent2D VulkanRenderer::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capa
 
 void VulkanRenderer::newFrame()
 {
+//     char* statsString = nullptr;
+// vmaBuildStatsString(m_allocator, &statsString, VK_TRUE);
+
+// // print it
+// std::cout << statsString << std::endl;
+
+// // free the string when done
+// vmaFreeStatsString(m_allocator, statsString);
+//     std::cout << "NEW FRAME: " << '\n';
+    //printAllHandles();
     assert(m_swapChain);
     vkWaitForFences(m_device, 1, &m_inFlightFences[m_currentFrame], VK_TRUE, UINT64_MAX);
     uint32_t imageIndex;
@@ -1602,10 +1653,11 @@ Mesh* VulkanRenderer::getMesh(const std::string& name)
     }
 }
 
-void VulkanRenderer::recordImguiData(ImDrawData* data)
-{
-	m_imguiDrawData[m_currentFrame] = data;
-}
+// void VulkanRenderer::recordImguiData(ImDrawData* data)
+// {
+// 	// m_imguiDrawData[m_currentFrame] = data;
+//     return;
+// }
 
 std::multimap<std::string, Renderable, RenderableComp>::iterator VulkanRenderer::addRenderable(Renderable obj)
 {

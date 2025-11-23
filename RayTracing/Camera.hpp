@@ -92,12 +92,12 @@ public:
 		m_pitch = std::clamp(m_pitch, glm::radians(-89.0f), glm::radians(89.0f));
     }
 
-    void update(float delaTime)
+    void update(float deltaTime)
     {
 		processKeyboardInput();
 		processMouseInput();
         glm::mat4 cameraRotation = getRotationMatrix();
-        m_position += glm::vec3(cameraRotation * glm::vec4(m_velocity * delaTime, 0.f));
+        m_position += glm::vec3(cameraRotation * glm::vec4(m_velocity * deltaTime, 0.f));
     }
 
     void calculatePitchYaw() 

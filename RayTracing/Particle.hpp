@@ -20,10 +20,10 @@ public:
 	
 	struct State
 	{
-		Types::Vec3d affectingForce;
-		Types::Vec3d acceleration;
-		Types::Vec3d velocity;
-		Types::Vec3d pos;
+		Types::Vec3d affectingForce{};
+		Types::Vec3d acceleration{};
+		Types::Vec3d velocity{};
+		Types::Vec3d pos{};
 	};
 
 	Particle();
@@ -84,7 +84,7 @@ public:
 
 	uint32_t			getBufferedStepCount() const { return static_cast<uint32_t>(m_states.size()); }	
 	void				setMaxStep(uint32_t maxStep) { *m_maxStep = maxStep; }
-	const uint32_t&     getMaxStep() const { return *m_maxStep; }
+	uint32_t getMaxStep() const { return m_maxStep->load(); }
 	State*				initialStateData() { return m_initialState.get(); }
 	State&				getInitialState() { return *m_initialState; }
 	double&				chargeData() { return m_charge; }
@@ -112,7 +112,7 @@ public:
 		return m_movable;
 	}
 	bool& movableData() { return m_movable; }
-	const bool isMovable() const { return m_movable; }
+	bool isMovable() const { return m_movable; }
 	const uint64_t& getId() const { return m_id; }
 	static void resetId() { nextId = 0; }
 	void setMethodMask(Types::OdeMethod method) { m_method = method; }
@@ -133,11 +133,11 @@ private:
 	Types::OdeMethod m_method = Types::OdeMethod::RK4;
 	double m_charge;
 	double m_mass;
-	Types::Vec3d m_affectingForce;
-	Types::Vec3d m_acceleration;
-	Types::Vec3d m_velocity;
-	Types::Vec3d m_pos;
 	bool m_movable;
+	Types::Vec3d m_pos;
+	Types::Vec3d m_velocity;
+	Types::Vec3d m_acceleration;
+	Types::Vec3d m_affectingForce;
 
 	Trail m_trail;
 
