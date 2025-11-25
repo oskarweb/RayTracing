@@ -33,15 +33,19 @@ target_link_libraries(${CORE_LIB_NAME}
 
 target_include_directories(${CORE_LIB_NAME}
     PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/..
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/src/third_party/implot
+    PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/third_party/stb_image
+        ${CMAKE_SOURCE_DIR}/src/third_party/tiny_obj_loader
 )
 
-# target_include_directories(Core PRIVATE 
-#     "third_party/stb_image"
-#     "third_party/tiny_obj_loader"
-# )
-
-# target_sources(Core PRIVATE 
-#     "third_party/stb_image/stb_image.h"
-#     "third_party/tiny_obj_loader/tiny_obj_loader.h"
-# )
+target_sources(${CORE_LIB_NAME} PUBLIC 
+    ${CMAKE_SOURCE_DIR}/src/third_party/stb_image/stb_image.h
+    ${CMAKE_SOURCE_DIR}/src/third_party/tiny_obj_loader/tiny_obj_loader.h
+    ${CMAKE_SOURCE_DIR}/src/third_party/implot/implot.cpp
+    ${CMAKE_SOURCE_DIR}/src/third_party/implot/implot_items.cpp
+    ${CMAKE_SOURCE_DIR}/src/third_party/implot/implot_internal.h
+    ${CMAKE_SOURCE_DIR}/src/third_party/implot/implot_demo.cpp
+    ${CMAKE_SOURCE_DIR}/src/third_party/implot/implot.h
+)

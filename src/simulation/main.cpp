@@ -1,7 +1,7 @@
 #include "simulation.hpp"
 
-#include "core/node.hpp"
-#include "core/vulkan_renderer.hpp"
+#include "node.hpp"
+#include "vulkan_renderer.hpp"
 
 int main() {
 	VulkanRenderer renderer{};

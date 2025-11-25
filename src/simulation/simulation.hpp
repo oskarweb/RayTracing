@@ -2,10 +2,13 @@
 
 #include "particle.hpp"
 
-#include "core/vulkan_renderer.hpp"
-#include "core/camera.hpp"
-#include "core/input.hpp"
-#include "core/models.hpp"
+#include "extras.hpp"
+#include "vulkan_renderer.hpp"
+#include "camera.hpp"
+#include "input.hpp"
+#include "models.hpp"
+
+#include "imgui.h"
 
 #include <condition_variable>
 #include <format>
@@ -135,13 +138,17 @@ private:
 	// GUI
 	std::vector<Particle>::iterator m_plotSelectedParticle;
 
-	// inline static constexpr const ImVec2 START_BUTTON_SIZE = ImVec2(148, 40);
-	// inline static constexpr const ImVec2 PRESET1_BUTTON_SIZE = ImVec2(70, 30);
-	// inline static constexpr const ImVec2 SET_INIT_STATE_BUTTON_SIZE = ImVec2(148, 25);
-	// Types::ImGuiWindowInfo m_mainCtrlWindowInfo = { MAIN_CTRL_WINDOW_MIN_SIZE, ImVec2(0, 0) };
-	// Types::ImGuiWindowInfo m_particleListWindowInfo = { PARTICLE_LIST_WINDOW_MIN_SIZE, ImVec2(0, 0) };
-	// Types::ImGuiWindowInfo m_particleAddWindowInfo = { PARTICLE_ADD_WINDOW_MIN_SIZE, ImVec2(0, 0) };
-	// Types::ImGuiWindowInfo m_plotWindowInfo = { PLOT_WINDOW_MIN_SIZE, ImVec2(0, 0) };
+	inline static constexpr const ImVec2 START_BUTTON_SIZE = ImVec2(148, 40);
+	inline static constexpr const ImVec2 PRESET1_BUTTON_SIZE = ImVec2(70, 30);
+	inline static constexpr const ImVec2 SET_INIT_STATE_BUTTON_SIZE = ImVec2(148, 25);
+	inline static constexpr const ImVec2 MAIN_CTRL_WINDOW_MIN_SIZE = ImVec2(400, 450);
+	inline static constexpr const ImVec2 PARTICLE_LIST_WINDOW_MIN_SIZE = ImVec2(600, 100);
+	inline static constexpr const ImVec2 PARTICLE_ADD_WINDOW_MIN_SIZE = ImVec2(280, 200);
+	inline static constexpr const ImVec2 PLOT_WINDOW_MIN_SIZE = ImVec2(400, 400);
+	Types::ImGuiWindowInfo m_mainCtrlWindowInfo = { MAIN_CTRL_WINDOW_MIN_SIZE, ImVec2(0, 0) };
+	Types::ImGuiWindowInfo m_particleListWindowInfo = { PARTICLE_LIST_WINDOW_MIN_SIZE, ImVec2(0, 0) };
+	Types::ImGuiWindowInfo m_particleAddWindowInfo = { PARTICLE_ADD_WINDOW_MIN_SIZE, ImVec2(0, 0) };
+	Types::ImGuiWindowInfo m_plotWindowInfo = { PLOT_WINDOW_MIN_SIZE, ImVec2(0, 0) };
 	
 	// CONSTANTS
 	inline static constexpr const int BACKWARD_EULER_ITERS = 20;
@@ -151,10 +158,6 @@ private:
 	inline static constexpr const uint32_t STEPS_BUFFERED_AT_ONCE = 1000;
 	inline static constexpr const uint32_t NUM_THREADS = 2;
 	inline static constexpr const float WINDOWS_BG_ALPHA = 0.50f;
-	// inline static constexpr const ImVec2 MAIN_CTRL_WINDOW_MIN_SIZE = ImVec2(400, 450);
-	// inline static constexpr const ImVec2 PARTICLE_LIST_WINDOW_MIN_SIZE = ImVec2(600, 100);
-	// inline static constexpr const ImVec2 PARTICLE_ADD_WINDOW_MIN_SIZE = ImVec2(280, 200);
-	// inline static constexpr const ImVec2 PLOT_WINDOW_MIN_SIZE = ImVec2(400, 400);
 	inline static constexpr const double SLIDER_MIN_AFFECTING_FORCE = -2.0;
 	inline static constexpr const double SLIDER_MAX_AFFECTING_FORCE = 2.0;
 	inline static constexpr const double SLIDER_MIN_POS = 0.0;
@@ -208,76 +211,76 @@ std::string Simulation::particleHeaderText(const Particle& particle)
 	return std::format("Particle {}", particle.getId());
 }
 
-// void Simulation::displayPresetButtons()
-// {
-// 	if (ImGui::Button("Preset1"))
-// 	{
-// 		for (const auto& config : PARTICLE_PRESET1)
-// 		{
-// 			addParticle(Particle(
-// 				config.charge,
-// 				config.mass,
-// 				config.movable,
-// 				config.pos,
-// 				config.velocity,
-// 				m_method
-// 			));
-// 		}
-// 	}
-// 	if (ImGui::Button("Preset2"))
-// 	{
-// 		for (const auto& config : PARTICLE_PRESET2)
-// 		{
-// 			addParticle(Particle(
-// 				config.charge,
-// 				config.mass,
-// 				config.movable,
-// 				config.pos,
-// 				config.velocity,
-// 				m_method
-// 			));
-// 		}
-// 	}
-// 	if (ImGui::Button("Preset3"))
-// 	{
-// 		for (const auto& config : PARTICLE_PRESET3)
-// 		{
-// 			addParticle(Particle(
-// 				config.charge,
-// 				config.mass,
-// 				config.movable,
-// 				config.pos,
-// 				config.velocity,
-// 				m_method
-// 			));
-// 		}
-// 	}
-// 	if (ImGui::Button("Preset4"))
-// 	{
-// 		for (const auto& config : PARTICLE_PRESET4)
-// 		{
-// 			addParticle(Particle(
-// 				config.charge,
-// 				config.mass,
-// 				config.movable,
-// 				config.pos,
-// 				config.velocity,
-// 				m_method
-// 			));
-// 		}
-// 	}
-// 	if (ImGui::Button("Preset5"))
-// 	{
-// 		for (const auto& config : PARTICLE_PRESET5)
-// 		{
-// 			addParticle(Particle(
-// 				config.charge,
-// 				config.mass,
-// 				config.movable,
-// 				config.pos,
-// 				config.velocity,
-// 				m_method
-// 			));
-// 		}
-// 	}
-// }
+void Simulation::displayPresetButtons()
+{
+	if (ImGui::Button("Preset1"))
+	{
+		for (const auto& config : PARTICLE_PRESET1)
+		{
+			addParticle(Particle(
+				config.charge,
+				config.mass,
+				config.movable,
+				config.pos,
+				config.velocity,
+				m_method
+			));
+		}
+	}
+	if (ImGui::Button("Preset2"))
+	{
+		for (const auto& config : PARTICLE_PRESET2)
+		{
+			addParticle(Particle(
+				config.charge,
+				config.mass,
+				config.movable,
+				config.pos,
+				config.velocity,
+				m_method
+			));
+		}
+	}
+	if (ImGui::Button("Preset3"))
+	{
+		for (const auto& config : PARTICLE_PRESET3)
+		{
+			addParticle(Particle(
+				config.charge,
+				config.mass,
+				config.movable,
+				config.pos,
+				config.velocity,
+				m_method
+			));
+		}
+	}
+	if (ImGui::Button("Preset4"))
+	{
+		for (const auto& config : PARTICLE_PRESET4)
+		{
+			addParticle(Particle(
+				config.charge,
+				config.mass,
+				config.movable,
+				config.pos,
+				config.velocity,
+				m_method
+			));
+		}
+	}
+	if (ImGui::Button("Preset5"))
+	{
+		for (const auto& config : PARTICLE_PRESET5)
+		{
+			addParticle(Particle(
+				config.charge,
+				config.mass,
+				config.movable,
+				config.pos,
+				config.velocity,
+				m_method
+			));
+		}
+	}
+}

@@ -1,10 +1,10 @@
 #pragma once
 
-#include "core/renderer_extras.hpp"
-#include "core/models.hpp"
-#include "core/node.hpp"
-#include "core/extras.hpp"
-#include "core/trail.hpp"
+#include "renderer_extras.hpp"
+#include "models.hpp"
+#include "node.hpp"
+#include "extras.hpp"
+#include "trail.hpp"
 
 #include <glm/glm.hpp>
 

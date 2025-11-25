@@ -6,7 +6,7 @@
 
 #include <glm/glm.hpp>
 
-// #include "imgui.h"
+#include "imgui.h"
 
 #include <fstream>
 #include <cstdint>
@@ -55,11 +55,11 @@ namespace Types
 
 	inline constexpr double operator*(const Vec3d& v) { return v.x + v.y + v.z; }
 
-    // struct ImGuiWindowInfo
-    // {
-	// 	ImVec2 size;
-	// 	ImVec2 pos;
-    // };
+    struct ImGuiWindowInfo
+    {
+		ImVec2 size;
+		ImVec2 pos;
+    };
 
     enum class OdeMethod
     {
