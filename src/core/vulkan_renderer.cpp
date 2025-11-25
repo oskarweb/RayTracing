@@ -1,10 +1,12 @@
-﻿#include "VulkanRenderer.hpp"
+﻿#include "vulkan_renderer.hpp"
 
 // #define STB_IMAGE_IMPLEMENTATION
 // #include <stb_image.h>
 
 // #define TINYOBJLOADER_IMPLEMENTATION
 // #include "tiny_obj_loader.h"
+
+#include "vk_mem_alloc.h"
 
 #include <iostream>
 #include <stdexcept>

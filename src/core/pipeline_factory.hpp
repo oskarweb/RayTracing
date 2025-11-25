@@ -1,14 +1,14 @@
 #pragma once
 
+#include "vertex.hpp"
+#include "extras.hpp"
+
 #include <vulkan/vulkan.h>
 
 #include <utility>
 #include <vector>
 #include <string>
 #include <filesystem>
-
-#include "Vertex.hpp"
-#include "extras.hpp"
 
 struct PipelineCreateInfo
 {

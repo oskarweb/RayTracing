@@ -1,4 +1,4 @@
-#include "Node.hpp"
+#include "node.hpp"
 
 void Node::setRenderer(Renderer *renderer)
 {

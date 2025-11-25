@@ -1,8 +1,16 @@
 ﻿#pragma once
+
+#include "renderer.hpp"
+#include "extras.hpp"
+#include "camera.hpp"
+#include "vertex.hpp"
+#include "mesh.hpp"
+#include "pipeline_factory.hpp"
+#include "renderer_extras.hpp"
+#include "models.hpp"
+
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
-
-#include "vma/vk_mem_alloc.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -25,14 +33,8 @@
 #include <memory>
 #include <set>
 
-#include "Renderer.hpp"
-#include "extras.hpp"
-#include "Camera.hpp"
-#include "Vertex.hpp"
-#include "Mesh.hpp"
-#include "PipelineFactory.hpp"
-#include "RendererStructs.hpp"
-#include "Models.hpp"
+struct VmaAllocator_T;
+using VmaAllocator = VmaAllocator_T*;
 
 class VulkanRenderer : public Renderer
 {

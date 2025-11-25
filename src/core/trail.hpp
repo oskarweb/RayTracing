@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Node.hpp"
+#include "node.hpp"
 
 class Trail : public Node
 {

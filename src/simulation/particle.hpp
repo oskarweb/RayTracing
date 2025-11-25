@@ -1,5 +1,11 @@
 #pragma once
 
+#include "core/renderer_extras.hpp"
+#include "core/models.hpp"
+#include "core/node.hpp"
+#include "core/extras.hpp"
+#include "core/trail.hpp"
+
 #include <glm/glm.hpp>
 
 #include <optional>
@@ -7,12 +13,6 @@
 #include <memory>
 #include <thread>
 #include <mutex>
-
-#include "RendererStructs.hpp"
-#include "Models.hpp"
-#include "Node.hpp"
-#include "extras.hpp"
-#include "Trail.hpp"
 
 class Particle : public Node
 {

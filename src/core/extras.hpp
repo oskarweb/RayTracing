@@ -147,30 +147,6 @@ namespace Helpers
         throw std::runtime_error("failed to find suitable memory type!");
     }
 
-    inline void createBuffer(    
-        VmaAllocator allocator,
-        VkDeviceSize size,
-        VkBufferUsageFlags usage,
-        VmaMemoryUsage allocUsage,
-        VmaAllocationCreateFlags allocFlags,
-        VkBuffer& buffer,
-        VmaAllocation& allocation)
-    {
-        VkBufferCreateInfo bufferInfo{};
-        bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        bufferInfo.size = size;
-        bufferInfo.usage = usage;
-        bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-        VmaAllocationCreateInfo allocInfo{};
-        allocInfo.usage = allocUsage;
-        allocInfo.flags = allocFlags;
-
-        if (vmaCreateBuffer(allocator, &bufferInfo, &allocInfo, &buffer, &allocation, nullptr) != VK_SUCCESS) {
-            throw std::runtime_error("failed to create buffer with VMA!");
-        }
-    }
-
     inline VkCommandBuffer beginSingleTimeCommands(VkDevice device, VkCommandPool commandPool) {
         VkCommandBufferAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;

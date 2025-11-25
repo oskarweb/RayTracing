@@ -1,10 +1,11 @@
 ﻿#pragma once
 
-#include "VulkanRenderer.hpp"
-#include "Camera.hpp"
-#include "Input.hpp"
-#include "Models.hpp"
-#include "Particle.hpp"
+#include "particle.hpp"
+
+#include "core/vulkan_renderer.hpp"
+#include "core/camera.hpp"
+#include "core/input.hpp"
+#include "core/models.hpp"
 
 #include <condition_variable>
 #include <format>

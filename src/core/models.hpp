@@ -1,16 +1,15 @@
 #pragma once
 
+#include "renderer.hpp"
+#include "renderer_extras.hpp"
+#include "extras.hpp"
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
 
 #include <map>
-
-#include "Renderer.hpp"
-#include "RendererStructs.hpp"
-#include "extras.hpp"
-
 
 inline void printVec3(glm::vec3& vec, const std::string& name = "")
 {

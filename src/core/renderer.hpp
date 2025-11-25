@@ -1,9 +1,9 @@
 #pragma once
 
+#include "renderer_extras.hpp"
+
 #include <map>
 #include <string>
-
-#include "RendererStructs.hpp"
 
 struct Model;
 
