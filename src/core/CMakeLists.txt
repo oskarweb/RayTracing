@@ -1,5 +1,7 @@
 set(CORE_LIB_NAME "core" CACHE INTERNAL "")
 
+message(STATUS "Configuring core library: ${CORE_LIB_NAME}")
+
 add_library(${CORE_LIB_NAME} 
     "camera.hpp"
     "extras.hpp"
@@ -23,7 +25,7 @@ add_library(${CORE_LIB_NAME}
 
 target_link_libraries(${CORE_LIB_NAME}
     PUBLIC 
-        glfw 
+        glfw
         Vulkan::Vulkan 
         imgui::imgui 
         glm::glm 
@@ -32,10 +34,10 @@ target_link_libraries(${CORE_LIB_NAME}
 )
 
 target_include_directories(${CORE_LIB_NAME}
-    PUBLIC
+    SYSTEM PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_SOURCE_DIR}/src/third_party/implot
-    PRIVATE
+    SYSTEM PRIVATE
         ${CMAKE_SOURCE_DIR}/src/third_party/stb_image
         ${CMAKE_SOURCE_DIR}/src/third_party/tiny_obj_loader
 )
@@ -49,3 +51,5 @@ target_sources(${CORE_LIB_NAME} PUBLIC
     ${CMAKE_SOURCE_DIR}/src/third_party/implot/implot_demo.cpp
     ${CMAKE_SOURCE_DIR}/src/third_party/implot/implot.h
 )
+
+set_target_compile_options(${CORE_LIB_NAME})

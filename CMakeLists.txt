@@ -1,4 +1,6 @@
-﻿cmake_minimum_required(VERSION 4.1)
+﻿include(${CMAKE_SOURCE_DIR}/cmake/utils.cmake)
+
+cmake_minimum_required(VERSION 4.1)
 
 project("RayTracing")
 
@@ -10,14 +12,5 @@ endif()
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-if(MSVC)
-    message(STATUS "Configuring for MSVC")
-    add_compile_options(/analyze)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /utf-8 /Zc:char8_t-")
-else()
-    add_compile_options(-Wall -Wextra -Wpedantic -Wno-unused-variable -Wno-unused-parameter)
-    message(STATUS "Configuring for non-MSVC compiler")
-endif()
 
 add_subdirectory("src")

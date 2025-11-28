@@ -1,5 +1,7 @@
 set(SIMULATION_SUBPROJECT_NAME "coulomb_law_simulation" CACHE INTERNAL "")
 
+message(STATUS "Configuring simulation subproject: ${SIMULATION_SUBPROJECT_NAME}")
+
 add_executable(${SIMULATION_SUBPROJECT_NAME}
     "main.cpp"
     "particle.hpp"
@@ -39,3 +41,5 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/src/shaders" "$<TARGET_FILE_DIR:${SIMULATION_SUBPROJECT_NAME}>/shaders"
     COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/src/textures" "$<TARGET_FILE_DIR:${SIMULATION_SUBPROJECT_NAME}>/textures"
 )
+
+set_target_compile_options(${SIMULATION_SUBPROJECT_NAME})

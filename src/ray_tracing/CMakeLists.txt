@@ -1,5 +1,7 @@
 ﻿set(RAY_TRACING_SUBPROJECT_NAME "ray_tracing" CACHE INTERNAL "")
 
+message(STATUS "Configuring ray tracing subproject: ${RAY_TRACING_SUBPROJECT_NAME}")
+
 add_executable(${RAY_TRACING_SUBPROJECT_NAME}
     "main.cpp"
 )
@@ -20,3 +22,5 @@ foreach(OUTPUTCONFIG IN LISTS CMAKE_CONFIGURATION_TYPES)
         RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG_UPPER} "${CMAKE_BINARY_DIR}/${OUTPUTCONFIG}/${RAY_TRACING_SUBPROJECT_NAME}"
     )
 endforeach()
+
+set_target_compile_options(${RAY_TRACING_SUBPROJECT_NAME})
