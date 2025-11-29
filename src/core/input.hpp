@@ -22,16 +22,13 @@ public:
 
 	inline static std::map<int, Key> keyStates =
 	{
-		{GLFW_KEY_W, Key(false, false)},
-		{GLFW_KEY_S, Key(false, false)},
-		{GLFW_KEY_A, Key(false, false)},
-		{GLFW_KEY_D, Key(false, false)},
-		{GLFW_KEY_C, Key(false, false)},
-		{GLFW_KEY_F, Key(false, false)}
+		{GLFW_KEY_W, Key{false, false}},
+		{GLFW_KEY_S, Key{false, false}},
+		{GLFW_KEY_A, Key{false, false}},
+		{GLFW_KEY_D, Key{false, false}},
+		{GLFW_KEY_C, Key{false, false}},
+		{GLFW_KEY_F, Key{false, false}}
 	};
-
-	inline static Point mousePos = { 0.0, 0.0 };
-	inline static GLFWwindow* windowHandle = nullptr;
 
 	inline static void setWindow(GLFWwindow* window)
 	{
@@ -62,6 +59,9 @@ public:
 
 	inline static void mouseCallback(GLFWwindow* window, double xpos, double ypos);
 	inline static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
+	
+	inline static Point mousePos = { 0.0, 0.0 };
+	inline static GLFWwindow* windowHandle = nullptr;
 };
 
 void Input::mouseCallback(GLFWwindow* window, double xpos, double ypos)

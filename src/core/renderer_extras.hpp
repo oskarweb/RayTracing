@@ -2,6 +2,9 @@
 
 #include "mesh.hpp"
 
+struct VmaAllocation_T;
+using VmaAllocation = VmaAllocation_T*;
+
 struct Material
 {
 	std::string name = "default";

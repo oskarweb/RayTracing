@@ -5,6 +5,8 @@
 
 #include "implot.h"
 
+#include <cstring>
+
 void Simulation::initWindow()
 {
     glfwInit();
@@ -538,6 +540,7 @@ void Simulation::displayMainCtrlWindow()
 	ImGui::Text("Own Delta Time: %fs", m_rendererHandle->getDeltaTime());
 	ImGui::Text("ImGui Delta Time: %fs", ImGui::GetIO().DeltaTime);
 	ImGui::Text("Framerate: %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+	ImGui::Text("Camera (x, y, z): (%.1f, %.1f, %.1f)", m_camera.position().x, m_camera.position().y, m_camera.position().z);
 
 	static double simulationTime = DEFAULT_SIMULATION_TIME;
 	static double timeStep = DEFAULT_TIME_STEP;

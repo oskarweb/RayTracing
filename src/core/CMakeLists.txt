@@ -6,6 +6,7 @@ add_library(${CORE_LIB_NAME}
     "camera.hpp"
     "extras.hpp"
     "extras.cpp"
+    "imports.cpp"
     "input.hpp"
     "mesh.hpp"
     "mesh.cpp"
@@ -18,7 +19,6 @@ add_library(${CORE_LIB_NAME}
     "trail.cpp"
     "trail.hpp"
     "vertex.hpp"
-    "vma_usage.cpp"
     "vulkan_renderer.cpp"
     "vulkan_renderer.hpp"
 )

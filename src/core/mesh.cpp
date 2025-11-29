@@ -13,7 +13,7 @@ void Mesh::createIndexBuffer(VmaAllocator &allocator, VkQueue graphicsQueue, VkC
     stagingBufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
     stagingBufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     VmaAllocationCreateInfo stagingAllocInfo{};
-    stagingAllocInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
+    stagingAllocInfo.usage = VMA_MEMORY_USAGE_AUTO;
     stagingAllocInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
     
     if (vmaCreateBuffer(allocator, &stagingBufferInfo, &stagingAllocInfo, &stagingBuffer, &stagingAllocation, nullptr) != VK_SUCCESS) {
@@ -31,7 +31,7 @@ void Mesh::createIndexBuffer(VmaAllocator &allocator, VkQueue graphicsQueue, VkC
     indexBufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
     indexBufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     VmaAllocationCreateInfo indexAllocInfo{};
-    indexAllocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+    indexAllocInfo.usage = VMA_MEMORY_USAGE_AUTO;
     
     if (vmaCreateBuffer(allocator, &indexBufferInfo, &indexAllocInfo, &m_indexBuffer, &m_indexBufferAlloc, nullptr) != VK_SUCCESS) {
         throw std::runtime_error("failed to create buffer with VMA!");
@@ -52,20 +52,25 @@ void Mesh::createVertexBuffer(VmaAllocator &allocator, VkQueue graphicsQueue, Vk
     stagingBufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
     stagingBufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     VmaAllocationCreateInfo stagingAllocInfo{};
-    stagingAllocInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
+    stagingAllocInfo.usage = VMA_MEMORY_USAGE_AUTO;
     stagingAllocInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
     
     if (vmaCreateBuffer(allocator, &stagingBufferInfo, &stagingAllocInfo, &stagingBuffer, &stagingAllocation, nullptr) != VK_SUCCESS) {
         throw std::runtime_error("failed to create buffer with VMA!");
     }
 	
+    void* data;
+	vmaMapMemory(allocator, stagingAllocation, &data);
+	memcpy(data, m_vertices.data(), (size_t)bufferSize);
+	vmaUnmapMemory(allocator, stagingAllocation);
+
     VkBufferCreateInfo vertexBufferInfo{};
     vertexBufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     vertexBufferInfo.size = bufferSize;
     vertexBufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
     vertexBufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     VmaAllocationCreateInfo vertexAllocInfo{};
-    vertexAllocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+    vertexAllocInfo.usage = VMA_MEMORY_USAGE_AUTO;
     
     if (vmaCreateBuffer(allocator, &vertexBufferInfo, &vertexAllocInfo, &m_vertexBuffer, &m_vertexBufferAlloc, nullptr) != VK_SUCCESS) {
         throw std::runtime_error("failed to create buffer with VMA!");

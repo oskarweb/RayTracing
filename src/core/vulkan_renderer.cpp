@@ -1,9 +1,7 @@
 ﻿#include "vulkan_renderer.hpp"
 
-#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-#define TINYOBJLOADER_IMPLEMENTATION
 #include "tiny_obj_loader.h"
 
 #include "vk_mem_alloc.h"
@@ -29,7 +27,7 @@
 #ifdef NDEBUG
 const bool enableValidationLayers = true;
 #else
-const bool enableValidationLayers = false;
+const bool enableValidationLayers = true;
 #endif
 
 void VulkanRenderer::recreateSwapChain()
@@ -44,7 +42,6 @@ void VulkanRenderer::recreateSwapChain()
     }
     vkDeviceWaitIdle(m_device);
 
-    // ImGui_ImplVulkan_Shutdown();
     m_prevSwapChain = m_swapChain;
 
     cleanupSwapChain(false);
@@ -57,10 +54,7 @@ void VulkanRenderer::recreateSwapChain()
     createColorResources();
     createDepthResources();
     createFramebuffers();
-    // createUniformBuffers();
     createSyncObjects();
-
-    // initImplVulkanImGui();
 }
 
 void VulkanRenderer::cleanupSwapChain(bool hard)
@@ -622,7 +616,6 @@ void VulkanRenderer::createUniformBuffers()
         allocInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
         VmaAllocationInfo vmaInfo{};
 
-
         vmaCreateBuffer(
             m_allocator,
             &bufferInfo,
@@ -631,7 +624,7 @@ void VulkanRenderer::createUniformBuffers()
             &m_uniformBuffersAlloc[i],
             &vmaInfo
         );
-           std::cout << vmaInfo.deviceMemory << " offset " << vmaInfo.offset << '\n';
+
         m_uniformBuffersMapped[i] = vmaInfo.pMappedData;
     }
 }
@@ -649,8 +642,6 @@ void VulkanRenderer::createDescriptorSets() {
     {
         throw std::runtime_error("failed to allocate descriptor sets!");
     }
-
-    return;
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         VkDescriptorBufferInfo bufferInfo{};
@@ -1326,7 +1317,7 @@ void VulkanRenderer::cleanup()
     ImPlot::DestroyContext();
     ImGui::DestroyContext();
 
-    cleanupSwapChain(false);
+    cleanupSwapChain(true);
 
     for (auto& [name, material] : m_materials)
     {

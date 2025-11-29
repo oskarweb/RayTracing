@@ -184,6 +184,8 @@ namespace Helpers
         VkCommandBuffer commandBuffer = beginSingleTimeCommands(device, commandPool);
 
         VkBufferCopy copyRegion{};
+        copyRegion.dstOffset = 0;
+        copyRegion.srcOffset = 0;
         copyRegion.size = size;
         vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
 
