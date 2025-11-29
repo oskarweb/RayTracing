@@ -2,7 +2,7 @@ set(CORE_LIB_NAME "core" CACHE INTERNAL "")
 
 message(STATUS "Configuring core library: ${CORE_LIB_NAME}")
 
-add_library(${CORE_LIB_NAME} 
+add_library(${CORE_LIB_NAME} STATIC
     "camera.hpp"
     "extras.hpp"
     "extras.cpp"
@@ -34,22 +34,31 @@ target_link_libraries(${CORE_LIB_NAME}
 )
 
 target_include_directories(${CORE_LIB_NAME}
-    SYSTEM PUBLIC
+    PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}
-        ${CMAKE_SOURCE_DIR}/src/third_party/implot
-    SYSTEM PRIVATE
-        ${CMAKE_SOURCE_DIR}/src/third_party/stb_image
-        ${CMAKE_SOURCE_DIR}/src/third_party/tiny_obj_loader
 )
 
-target_sources(${CORE_LIB_NAME} PUBLIC 
-    ${CMAKE_SOURCE_DIR}/src/third_party/stb_image/stb_image.h
-    ${CMAKE_SOURCE_DIR}/src/third_party/tiny_obj_loader/tiny_obj_loader.h
-    ${CMAKE_SOURCE_DIR}/src/third_party/implot/implot.cpp
-    ${CMAKE_SOURCE_DIR}/src/third_party/implot/implot_items.cpp
-    ${CMAKE_SOURCE_DIR}/src/third_party/implot/implot_internal.h
-    ${CMAKE_SOURCE_DIR}/src/third_party/implot/implot_demo.cpp
-    ${CMAKE_SOURCE_DIR}/src/third_party/implot/implot.h
+add_library(implot STATIC
+    ${CMAKE_SOURCE_DIR}/third_party/implot/implot.cpp
+    ${CMAKE_SOURCE_DIR}/third_party/implot/implot_items.cpp
+    ${CMAKE_SOURCE_DIR}/third_party/implot/implot_internal.h
+    ${CMAKE_SOURCE_DIR}/third_party/implot/implot_demo.cpp
+    ${CMAKE_SOURCE_DIR}/third_party/implot/implot.h
+)
+target_include_directories(implot SYSTEM PUBLIC ${CMAKE_SOURCE_DIR}/third_party/implot)
+target_link_libraries(implot PRIVATE imgui::imgui)
+
+add_library(stb_image INTERFACE ${CMAKE_SOURCE_DIR}/third_party/stb_image/stb_image.h)
+target_include_directories(stb_image SYSTEM INTERFACE ${CMAKE_SOURCE_DIR}/third_party/stb_image)
+
+add_library(tiny_obj_loader INTERFACE ${CMAKE_SOURCE_DIR}/third_party/tiny_obj_loader/tiny_obj_loader.h)
+target_include_directories(tiny_obj_loader SYSTEM INTERFACE ${CMAKE_SOURCE_DIR}/third_party/tiny_obj_loader)
+
+target_link_libraries(${CORE_LIB_NAME} 
+    PUBLIC
+        implot
+        stb_image
+        tiny_obj_loader
 )
 
 set_target_compile_options(${CORE_LIB_NAME})
