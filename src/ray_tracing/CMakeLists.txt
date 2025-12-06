@@ -25,4 +25,10 @@ foreach(OUTPUTCONFIG IN LISTS CMAKE_CONFIGURATION_TYPES)
     )
 endforeach()
 
+add_custom_command(
+    TARGET ${RAY_TRACING_SUBPROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/src/fonts" "$<TARGET_FILE_DIR:${RAY_TRACING_SUBPROJECT_NAME}>/fonts"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/src/shaders" "$<TARGET_FILE_DIR:${RAY_TRACING_SUBPROJECT_NAME}>/shaders"
+)
+
 set_target_compile_options(${RAY_TRACING_SUBPROJECT_NAME})
