@@ -11,13 +11,9 @@
 class Camera
 {
   public:
-    Camera()
-        : m_position(glm::vec3(0.0f, 0.0f, 0.0f)), m_pitch(0.0f), m_yaw(0.0f)
-    {
-    }
+    Camera() : m_position(glm::vec3(0.0f, 0.0f, 0.0f)), m_pitch(0.0f), m_yaw(0.0f) {}
 
-    Camera(glm::vec3 position, float pitch, float yaw, glm::vec3 up)
-        : m_position(position), m_pitch(pitch), m_yaw(yaw)
+    Camera(glm::vec3 position, float pitch, float yaw, glm::vec3 up) : m_position(position), m_pitch(pitch), m_yaw(yaw)
     {
     }
 
@@ -25,19 +21,16 @@ class Camera
     {
         if (m_lookingAtOrigin)
         {
-            return glm::lookAt(m_position, glm::vec3(0.0f, 0.0f, 0.0f),
-                               -Constants::WORLD_UP);
+            return glm::lookAt(m_position, glm::vec3(0.0f, 0.0f, 0.0f), -Constants::WORLD_UP);
         }
-        glm::mat4 cameraTranslation =
-            glm::translate(glm::mat4(1.f), m_position);
+        glm::mat4 cameraTranslation = glm::translate(glm::mat4(1.f), m_position);
         glm::mat4 cameraRotation = getRotationMatrix();
         return glm::inverse(cameraTranslation * cameraRotation);
     }
 
     glm::mat4 getRotationMatrix()
     {
-        glm::quat pitchRotation =
-            glm::angleAxis(m_pitch, glm::vec3{1.f, 0.f, 0.f});
+        glm::quat pitchRotation = glm::angleAxis(m_pitch, glm::vec3{1.f, 0.f, 0.f});
         glm::quat yawRotation = glm::angleAxis(m_yaw, glm::vec3{0.f, 1.f, 0.f});
 
         return glm::toMat4(yawRotation) * glm::toMat4(pitchRotation);
@@ -102,27 +95,20 @@ class Camera
 
         if (m_lookingAtOrigin)
         {
-            m_position =
-                glm::rotate(glm::mat4(1.0f), static_cast<float>(xoffset),
-                            glm::vec3(0.0f, 1.0f, 0.0f)) *
-                glm::vec4(m_position, 1.0f);
-            glm::vec3 axis = glm::normalize(
-                glm::cross(m_position, glm::vec3(0.0f, 1.0f, 0.0f)));
-            if (m_pitch > glm::radians(-ORIGIN_CAMERA_PITCH_LIMIT) &&
-                m_pitch < glm::radians(ORIGIN_CAMERA_PITCH_LIMIT))
+            m_position = glm::rotate(glm::mat4(1.0f), static_cast<float>(xoffset), glm::vec3(0.0f, 1.0f, 0.0f)) *
+                         glm::vec4(m_position, 1.0f);
+            glm::vec3 axis = glm::normalize(glm::cross(m_position, glm::vec3(0.0f, 1.0f, 0.0f)));
+            if (m_pitch > glm::radians(-ORIGIN_CAMERA_PITCH_LIMIT) && m_pitch < glm::radians(ORIGIN_CAMERA_PITCH_LIMIT))
             {
-                m_position = glm::rotate(glm::mat4(1.0f),
-                                         static_cast<float>(yoffset), axis) *
-                             glm::vec4(m_position, 1.0f);
+                m_position =
+                    glm::rotate(glm::mat4(1.0f), static_cast<float>(yoffset), axis) * glm::vec4(m_position, 1.0f);
             }
             m_pitch =
-                std::clamp(m_pitch, glm::radians(-ORIGIN_CAMERA_PITCH_LIMIT),
-                           glm::radians(ORIGIN_CAMERA_PITCH_LIMIT));
+                std::clamp(m_pitch, glm::radians(-ORIGIN_CAMERA_PITCH_LIMIT), glm::radians(ORIGIN_CAMERA_PITCH_LIMIT));
             return;
         }
 
-        m_pitch =
-            std::clamp(m_pitch, glm::radians(-89.0f), glm::radians(89.0f));
+        m_pitch = std::clamp(m_pitch, glm::radians(-89.0f), glm::radians(89.0f));
     }
 
     void update(float deltaTime)
@@ -130,8 +116,7 @@ class Camera
         processKeyboardInput();
         processMouseInput();
         glm::mat4 cameraRotation = getRotationMatrix();
-        m_position +=
-            glm::vec3(cameraRotation * glm::vec4(m_velocity * deltaTime, 0.f));
+        m_position += glm::vec3(cameraRotation * glm::vec4(m_velocity * deltaTime, 0.f));
     }
 
     void calculatePitchYaw()

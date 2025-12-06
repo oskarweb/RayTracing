@@ -21,8 +21,7 @@ class Simulation
   public:
     Simulation(VulkanRenderer *rendererHandle)
         : m_rendererHandle(rendererHandle),
-          m_camera(Camera(glm::vec3(-10.0f, -10.0f, -10.0f), 0.0f, 0.0f,
-                          glm::vec3(0.0f, 0.0f, 1.0f))),
+          m_camera(Camera(glm::vec3(-10.0f, -10.0f, -10.0f), 0.0f, 0.0f, glm::vec3(0.0f, 0.0f, 1.0f))),
           m_threads(NUM_THREADS)
     {
     }
@@ -65,18 +64,15 @@ class Simulation
     };
 
   private:
-    static inline void framebufferResizeCallback(GLFWwindow *window, int width,
-                                                 int height);
+    static inline void framebufferResizeCallback(GLFWwindow *window, int width, int height);
 
     void updateStatic();
     void updateAllPrecalc();
     void update20MsPecalc();
     void updateRealTime();
 
-    Types::Vec3d calcForce(uint32_t stateId, Particle &particle,
-                           Types::Vec3d distanceMod = 0.0);
-    Types::Vec3d calcForcePosOverride(uint32_t stateId, Particle &particle,
-                                      Types::Vec3d distanceOverride = 0.0);
+    Types::Vec3d calcForce(uint32_t stateId, Particle &particle, Types::Vec3d distanceMod = 0.0);
+    Types::Vec3d calcForcePosOverride(uint32_t stateId, Particle &particle, Types::Vec3d distanceOverride = 0.0);
 
     void calculateSteps(uint32_t startingStep);
 
@@ -88,8 +84,7 @@ class Simulation
     void updatePositionsThreaded();
     void calculateParticlePositions(bool all = false);
     void launchParticleThreads();
-    void calculateParticlePostionsThreaded(std::stop_token stopToken,
-                                           uint32_t minIdx, uint32_t maxIdx);
+    void calculateParticlePostionsThreaded(std::stop_token stopToken, uint32_t minIdx, uint32_t maxIdx);
     void calculatePositionsForSingleParticle(Particle *particle);
     void addParticle(Particle &&particle);
     void removeParticle(std::vector<Particle>::iterator &it);
@@ -102,10 +97,7 @@ class Simulation
         return 1'000'000'000u / static_cast<uint32_t>(sizeof(Particle::State)) /
                (static_cast<uint32_t>(m_particles.size()) + 1);
     }
-    uint32_t getStepsPer20ms()
-    {
-        return static_cast<uint32_t>(0.02 / m_timeStep);
-    }
+    uint32_t getStepsPer20ms() { return static_cast<uint32_t>(0.02 / m_timeStep); }
 
     // GUI
     void displayMainCtrlWindow();
@@ -113,8 +105,7 @@ class Simulation
     void displayParticleAddWindow();
     void displayPlotWindow();
     static inline std::string particleHeaderText(const Particle &particle);
-    static inline void displayUnitSelector(const std::string &unit,
-                                           int &prefixIdx);
+    static inline void displayUnitSelector(const std::string &unit, int &prefixIdx);
     inline void displayPresetButtons();
 
     //
@@ -153,24 +144,15 @@ class Simulation
 
     inline static constexpr const ImVec2 START_BUTTON_SIZE = ImVec2(148, 40);
     inline static constexpr const ImVec2 PRESET1_BUTTON_SIZE = ImVec2(70, 30);
-    inline static constexpr const ImVec2 SET_INIT_STATE_BUTTON_SIZE =
-        ImVec2(148, 25);
-    inline static constexpr const ImVec2 MAIN_CTRL_WINDOW_MIN_SIZE =
-        ImVec2(400, 450);
-    inline static constexpr const ImVec2 PARTICLE_LIST_WINDOW_MIN_SIZE =
-        ImVec2(600, 100);
-    inline static constexpr const ImVec2 PARTICLE_ADD_WINDOW_MIN_SIZE =
-        ImVec2(280, 200);
-    inline static constexpr const ImVec2 PLOT_WINDOW_MIN_SIZE =
-        ImVec2(400, 400);
-    Types::ImGuiWindowInfo m_mainCtrlWindowInfo = {MAIN_CTRL_WINDOW_MIN_SIZE,
-                                                   ImVec2(0, 0)};
-    Types::ImGuiWindowInfo m_particleListWindowInfo = {
-        PARTICLE_LIST_WINDOW_MIN_SIZE, ImVec2(0, 0)};
-    Types::ImGuiWindowInfo m_particleAddWindowInfo = {
-        PARTICLE_ADD_WINDOW_MIN_SIZE, ImVec2(0, 0)};
-    Types::ImGuiWindowInfo m_plotWindowInfo = {PLOT_WINDOW_MIN_SIZE,
-                                               ImVec2(0, 0)};
+    inline static constexpr const ImVec2 SET_INIT_STATE_BUTTON_SIZE = ImVec2(148, 25);
+    inline static constexpr const ImVec2 MAIN_CTRL_WINDOW_MIN_SIZE = ImVec2(400, 450);
+    inline static constexpr const ImVec2 PARTICLE_LIST_WINDOW_MIN_SIZE = ImVec2(600, 100);
+    inline static constexpr const ImVec2 PARTICLE_ADD_WINDOW_MIN_SIZE = ImVec2(280, 200);
+    inline static constexpr const ImVec2 PLOT_WINDOW_MIN_SIZE = ImVec2(400, 400);
+    Types::ImGuiWindowInfo m_mainCtrlWindowInfo = {MAIN_CTRL_WINDOW_MIN_SIZE, ImVec2(0, 0)};
+    Types::ImGuiWindowInfo m_particleListWindowInfo = {PARTICLE_LIST_WINDOW_MIN_SIZE, ImVec2(0, 0)};
+    Types::ImGuiWindowInfo m_particleAddWindowInfo = {PARTICLE_ADD_WINDOW_MIN_SIZE, ImVec2(0, 0)};
+    Types::ImGuiWindowInfo m_plotWindowInfo = {PLOT_WINDOW_MIN_SIZE, ImVec2(0, 0)};
 
     // CONSTANTS
     inline static constexpr const int BACKWARD_EULER_ITERS = 20;
@@ -185,25 +167,18 @@ class Simulation
     inline static constexpr const double SLIDER_MIN_POS = 0.0;
     inline static constexpr const double SLIDER_MAX_POS = 10.0;
     inline static constexpr const double DEFAULT_PARTICLE_MASS = 1.0;
-    inline static constexpr const double DEFAULT_PARTICLE_CHARGE =
-        1; // dependent on unit prefix
+    inline static constexpr const double DEFAULT_PARTICLE_CHARGE = 1; // dependent on unit prefix
     inline static constexpr const bool DEFAULT_PARTICLE_MOVABLE = true;
-    inline static const Types::Vec3d DEFAULT_PARTICLE_POSITION =
-        Types::Vec3d{0.0};
-    inline static const Types::Vec3d DEFAULT_PARTICLE_VELOCITY =
-        Types::Vec3d{0.0};
+    inline static const Types::Vec3d DEFAULT_PARTICLE_POSITION = Types::Vec3d{0.0};
+    inline static const Types::Vec3d DEFAULT_PARTICLE_VELOCITY = Types::Vec3d{0.0};
     inline static const char *UNIT_PREFIXES[] = {"none", "n", "m", "k"};
 
     // PRESETS
     inline static const ParticleConfig PARTICLE_PRESET1[] = {
-        {+0.00'1, 1.0, true, Types::Vec3d(+5.0, +5.0, +5.0),
-         DEFAULT_PARTICLE_VELOCITY},
-        {-0.00'1, 1.0, true, Types::Vec3d(-5.0, -5.0, -5.0),
-         DEFAULT_PARTICLE_VELOCITY},
-        {-0.00'1, 1.0, true, Types::Vec3d(+5.0, +0.0, -5.0),
-         DEFAULT_PARTICLE_VELOCITY},
-        {+0.00'1, 1.0, true, Types::Vec3d(-5.0, +0.0, +5.0),
-         DEFAULT_PARTICLE_VELOCITY},
+        {+0.00'1, 1.0, true, Types::Vec3d(+5.0, +5.0, +5.0), DEFAULT_PARTICLE_VELOCITY},
+        {-0.00'1, 1.0, true, Types::Vec3d(-5.0, -5.0, -5.0), DEFAULT_PARTICLE_VELOCITY},
+        {-0.00'1, 1.0, true, Types::Vec3d(+5.0, +0.0, -5.0), DEFAULT_PARTICLE_VELOCITY},
+        {+0.00'1, 1.0, true, Types::Vec3d(-5.0, +0.0, +5.0), DEFAULT_PARTICLE_VELOCITY},
     };
 
     inline static const ParticleConfig PARTICLE_PRESET2[] = {
@@ -212,37 +187,26 @@ class Simulation
     };
 
     inline static const ParticleConfig PARTICLE_PRESET3[] = {
-        {+0.00'01, 1.0, true, Types::Vec3d(+0.0, +0.0, +0.0),
-         DEFAULT_PARTICLE_VELOCITY},
-        {-0.00'01, 1.0, true, Types::Vec3d(+10.0, +0.0, +0.0),
-         DEFAULT_PARTICLE_VELOCITY},
+        {+0.00'01, 1.0, true, Types::Vec3d(+0.0, +0.0, +0.0), DEFAULT_PARTICLE_VELOCITY},
+        {-0.00'01, 1.0, true, Types::Vec3d(+10.0, +0.0, +0.0), DEFAULT_PARTICLE_VELOCITY},
     };
 
     inline static const ParticleConfig PARTICLE_PRESET4[] = {
-        {+0.00'02, 1.0, true, Types::Vec3d(+2.0, +0.0, +0.0),
-         DEFAULT_PARTICLE_VELOCITY},
-        {-0.00'01, 1.0, true, Types::Vec3d(+0.0, +3.0, +0.0),
-         DEFAULT_PARTICLE_VELOCITY},
-        {-0.00'01, 1.0, true, Types::Vec3d(+0.0, -3.0, +0.0),
-         DEFAULT_PARTICLE_VELOCITY},
-        {-0.00'01, 1.0, true, Types::Vec3d(+0.0, +0.0, +3.0),
-         DEFAULT_PARTICLE_VELOCITY},
-        {-0.00'01, 1.0, true, Types::Vec3d(+0.0, +0.0, -3.0),
-         DEFAULT_PARTICLE_VELOCITY},
+        {+0.00'02, 1.0, true, Types::Vec3d(+2.0, +0.0, +0.0), DEFAULT_PARTICLE_VELOCITY},
+        {-0.00'01, 1.0, true, Types::Vec3d(+0.0, +3.0, +0.0), DEFAULT_PARTICLE_VELOCITY},
+        {-0.00'01, 1.0, true, Types::Vec3d(+0.0, -3.0, +0.0), DEFAULT_PARTICLE_VELOCITY},
+        {-0.00'01, 1.0, true, Types::Vec3d(+0.0, +0.0, +3.0), DEFAULT_PARTICLE_VELOCITY},
+        {-0.00'01, 1.0, true, Types::Vec3d(+0.0, +0.0, -3.0), DEFAULT_PARTICLE_VELOCITY},
     };
     inline static const ParticleConfig PARTICLE_PRESET5[] = {
-        {+0.00'03, 1.0, false, Types::Vec3d(+0.0, +0.0, +0.0),
-         DEFAULT_PARTICLE_VELOCITY},
-        {-0.00'03, 1.0, true, Types::Vec3d(+8.0, +0.0, +0.0),
-         Types::Vec3d(0.0, 0.0, 7.0)},
+        {+0.00'03, 1.0, false, Types::Vec3d(+0.0, +0.0, +0.0), DEFAULT_PARTICLE_VELOCITY},
+        {-0.00'03, 1.0, true, Types::Vec3d(+8.0, +0.0, +0.0), Types::Vec3d(0.0, 0.0, 7.0)},
     };
 };
 
-void Simulation::framebufferResizeCallback(GLFWwindow *window, int width,
-                                           int height)
+void Simulation::framebufferResizeCallback(GLFWwindow *window, int width, int height)
 {
-    Simulation *app =
-        static_cast<Simulation *>(glfwGetWindowUserPointer(window));
+    Simulation *app = static_cast<Simulation *>(glfwGetWindowUserPointer(window));
     app->m_rendererHandle->notifyFramebufferResized();
 }
 
@@ -257,40 +221,35 @@ void Simulation::displayPresetButtons()
     {
         for (const auto &config : PARTICLE_PRESET1)
         {
-            addParticle(Particle(config.charge, config.mass, config.movable,
-                                 config.pos, config.velocity, m_method));
+            addParticle(Particle(config.charge, config.mass, config.movable, config.pos, config.velocity, m_method));
         }
     }
     if (ImGui::Button("Preset2"))
     {
         for (const auto &config : PARTICLE_PRESET2)
         {
-            addParticle(Particle(config.charge, config.mass, config.movable,
-                                 config.pos, config.velocity, m_method));
+            addParticle(Particle(config.charge, config.mass, config.movable, config.pos, config.velocity, m_method));
         }
     }
     if (ImGui::Button("Preset3"))
     {
         for (const auto &config : PARTICLE_PRESET3)
         {
-            addParticle(Particle(config.charge, config.mass, config.movable,
-                                 config.pos, config.velocity, m_method));
+            addParticle(Particle(config.charge, config.mass, config.movable, config.pos, config.velocity, m_method));
         }
     }
     if (ImGui::Button("Preset4"))
     {
         for (const auto &config : PARTICLE_PRESET4)
         {
-            addParticle(Particle(config.charge, config.mass, config.movable,
-                                 config.pos, config.velocity, m_method));
+            addParticle(Particle(config.charge, config.mass, config.movable, config.pos, config.velocity, m_method));
         }
     }
     if (ImGui::Button("Preset5"))
     {
         for (const auto &config : PARTICLE_PRESET5)
         {
-            addParticle(Particle(config.charge, config.mass, config.movable,
-                                 config.pos, config.velocity, m_method));
+            addParticle(Particle(config.charge, config.mass, config.movable, config.pos, config.velocity, m_method));
         }
     }
 }

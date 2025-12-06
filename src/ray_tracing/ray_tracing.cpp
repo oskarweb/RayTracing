@@ -10,10 +10,8 @@ void RayTracing::initWindow()
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-    m_window = glfwCreateWindow(Constants::WIDTH, Constants::HEIGHT,
-                                "Simulation", nullptr, nullptr);
-    glfwSetWindowSizeLimits(m_window, Constants::WIDTH, Constants::HEIGHT,
-                            GLFW_DONT_CARE, GLFW_DONT_CARE);
+    m_window = glfwCreateWindow(Constants::WIDTH, Constants::HEIGHT, "Simulation", nullptr, nullptr);
+    glfwSetWindowSizeLimits(m_window, Constants::WIDTH, Constants::HEIGHT, GLFW_DONT_CARE, GLFW_DONT_CARE);
     glfwSetWindowUserPointer(m_window, this);
     glfwSetFramebufferSizeCallback(m_window, framebufferResizeCallback);
 }
@@ -52,14 +50,11 @@ void RayTracing::run()
     ImFontConfig config;
     config.OversampleH = 1;
     config.OversampleV = 1;
-    std::filesystem::path arimoPath =
-        Constants::FONTS_PATH / "arimo" / "Arimo-Regular.ttf";
-    io.Fonts->AddFontFromFileTTF(arimoPath.string().c_str(), 16.0f, &config,
-                                 io.Fonts->GetGlyphRangesGreek());
+    std::filesystem::path arimoPath = Constants::FONTS_PATH / "arimo" / "Arimo-Regular.ttf";
+    io.Fonts->AddFontFromFileTTF(arimoPath.string().c_str(), 16.0f, &config, io.Fonts->GetGlyphRangesGreek());
     io.Fonts->Build();
     ImGui::StyleColorsDark();
-    ImGui_ImplGlfw_CursorPosCallback(m_window, Input::mousePos.x,
-                                     Input::mousePos.y);
+    ImGui_ImplGlfw_CursorPosCallback(m_window, Input::mousePos.x, Input::mousePos.y);
 
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 

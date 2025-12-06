@@ -173,10 +173,7 @@ struct Vec3d
         m_z -= other.m_z;
         return *this;
     }
-    inline constexpr Vec3d operator*(double scalar) const
-    {
-        return Vec3d{m_x * scalar, m_y * scalar, m_z * scalar};
-    }
+    inline constexpr Vec3d operator*(double scalar) const { return Vec3d{m_x * scalar, m_y * scalar, m_z * scalar}; }
     inline constexpr Vec3d &operator*=(double scalar)
     {
         m_x *= scalar;
@@ -184,10 +181,7 @@ struct Vec3d
         m_z *= scalar;
         return *this;
     }
-    inline constexpr Vec3d operator/(double scalar) const
-    {
-        return Vec3d{m_x / scalar, m_y / scalar, m_z / scalar};
-    }
+    inline constexpr Vec3d operator/(double scalar) const { return Vec3d{m_x / scalar, m_y / scalar, m_z / scalar}; }
     inline constexpr Vec3d &operator/=(double scalar)
     {
         m_x /= scalar;
@@ -200,10 +194,7 @@ struct Vec3d
         return m_x * other.m_x + m_y * other.m_y + m_z * other.m_z;
     }
 
-    friend inline constexpr Vec3d operator*(double scalar, const Vec3d &v)
-    {
-        return v * scalar;
-    }
+    friend inline constexpr Vec3d operator*(double scalar, const Vec3d &v) { return v * scalar; }
     friend inline constexpr Vec3d operator+(double scalar, const Vec3d &v)
     {
         return Vec3d{v.m_x + scalar, v.m_y + scalar, v.m_z + scalar};
@@ -215,20 +206,15 @@ struct Vec3d
     }
     inline double length(double softening = 0.0) const
     {
-        return std::sqrt((x() * x() + y() * y() + z() * z()) +
-                         softening * softening);
+        return std::sqrt((x() * x() + y() * y() + z() * z()) + softening * softening);
     }
-    inline Vec3d normalized(double softening = 0.0) const
-    {
-        return (softening + *this) / this->length(softening);
-    }
+    inline Vec3d normalized(double softening = 0.0) const { return (softening + *this) / this->length(softening); }
 
     explicit operator glm::vec3() const { return glm::vec3(x(), y(), z()); }
 
     template <typename T> T operator+(const T &other) const
     {
-        return T{static_cast<decltype(other.x)>(x) + other.x,
-                 static_cast<decltype(other.y)>(y) + other.y,
+        return T{static_cast<decltype(other.x)>(x) + other.x, static_cast<decltype(other.y)>(y) + other.y,
                  static_cast<decltype(other.z)>(z) + other.z};
     }
 };
@@ -250,10 +236,7 @@ inline double operator*(const Vec3d &a, const Vec3d &b)
     return _mm_cvtsd_f64(dot);
 }
 #else
-inline double operator*(const Vec3d &a, const Vec3d &b)
-{
-    return a.x() * b.x() + a.y() * b.y() + a.z() * b.z();
-}
+inline double operator*(const Vec3d &a, const Vec3d &b) { return a.x() * b.x() + a.y() * b.y() + a.z() * b.z(); }
 #endif
 
 struct ImGuiWindowInfo
@@ -283,8 +266,7 @@ constexpr const glm::vec3 WORLD_UP = glm::vec3(0.0f, -1.0f, 0.0f);
 
 const char *methods[] = {"1. RK4", "2. ForwardEuler", "3. Leapfrog"};
 
-const std::vector<const char *> validationLayers = {
-    "VK_LAYER_KHRONOS_validation"};
+const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
 
 const std::filesystem::path SHADERS_PATH = "shaders";
 const std::filesystem::path TEXTURES_PATH = "textures";
@@ -334,18 +316,14 @@ inline std::vector<char> readFile(const std::filesystem::path &filepath)
     return buffer;
 }
 
-inline uint32_t findMemoryType(VkPhysicalDevice physicalDevice,
-                               uint32_t typeFilter,
-                               VkMemoryPropertyFlags properties)
+inline uint32_t findMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties)
 {
     VkPhysicalDeviceMemoryProperties memProperties;
     vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
 
     for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
     {
-        if ((typeFilter & (1 << i)) &&
-            (memProperties.memoryTypes[i].propertyFlags & properties) ==
-                properties)
+        if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
         {
             return i;
         }
@@ -354,8 +332,7 @@ inline uint32_t findMemoryType(VkPhysicalDevice physicalDevice,
     throw std::runtime_error("failed to find suitable memory type!");
 }
 
-inline VkCommandBuffer beginSingleTimeCommands(VkDevice device,
-                                               VkCommandPool commandPool)
+inline VkCommandBuffer beginSingleTimeCommands(VkDevice device, VkCommandPool commandPool)
 {
     VkCommandBufferAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -375,8 +352,7 @@ inline VkCommandBuffer beginSingleTimeCommands(VkDevice device,
     return commandBuffer;
 }
 
-inline void endSingleTimeCommands(VkDevice device, VkQueue graphicsQueue,
-                                  VkCommandPool commandPool,
+inline void endSingleTimeCommands(VkDevice device, VkQueue graphicsQueue, VkCommandPool commandPool,
                                   VkCommandBuffer commandBuffer)
 {
     vkEndCommandBuffer(commandBuffer);
@@ -392,12 +368,10 @@ inline void endSingleTimeCommands(VkDevice device, VkQueue graphicsQueue,
     vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
 }
 
-inline void copyBuffer(VkDevice device, VkQueue graphicsQueue,
-                       VkCommandPool commandPool, VkBuffer srcBuffer,
+inline void copyBuffer(VkDevice device, VkQueue graphicsQueue, VkCommandPool commandPool, VkBuffer srcBuffer,
                        VkBuffer dstBuffer, VkDeviceSize size)
 {
-    VkCommandBuffer commandBuffer =
-        beginSingleTimeCommands(device, commandPool);
+    VkCommandBuffer commandBuffer = beginSingleTimeCommands(device, commandPool);
 
     VkBufferCopy copyRegion{};
     copyRegion.dstOffset = 0;
@@ -408,16 +382,14 @@ inline void copyBuffer(VkDevice device, VkQueue graphicsQueue,
     endSingleTimeCommands(device, graphicsQueue, commandPool, commandBuffer);
 }
 
-inline VkShaderModule createShaderModule(VkDevice device,
-                                         const std::vector<char> &code)
+inline VkShaderModule createShaderModule(VkDevice device, const std::vector<char> &code)
 {
     VkShaderModuleCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
     createInfo.codeSize = code.size();
     createInfo.pCode = reinterpret_cast<const uint32_t *>(code.data());
     VkShaderModule shaderModule;
-    if (vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule) !=
-        VK_SUCCESS)
+    if (vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS)
     {
         throw std::runtime_error("failed to create shader module!");
     }

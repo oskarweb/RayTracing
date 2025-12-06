@@ -12,8 +12,7 @@ struct Material
     VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
 
     Material() : pipeline(VK_NULL_HANDLE), pipelineLayout(VK_NULL_HANDLE) {}
-    Material(const std::string &name, VkPipeline pipeline,
-             VkPipelineLayout pipelineLayout)
+    Material(const std::string &name, VkPipeline pipeline, VkPipelineLayout pipelineLayout)
         : name(name), pipeline(pipeline), pipelineLayout(pipelineLayout)
     {
     }
@@ -31,10 +30,7 @@ struct Renderable
 
 struct RenderableComp
 {
-    bool operator()(const std::string &lhs, const std::string &rhs) const
-    {
-        return lhs < rhs;
-    }
+    bool operator()(const std::string &lhs, const std::string &rhs) const { return lhs < rhs; }
 };
 
 struct Image
@@ -54,10 +50,7 @@ struct QueueFamilyIndices
     std::optional<uint32_t> graphicsFamily;
     std::optional<uint32_t> presentFamily;
 
-    bool isComplete()
-    {
-        return graphicsFamily.has_value() && presentFamily.has_value();
-    }
+    bool isComplete() { return graphicsFamily.has_value() && presentFamily.has_value(); }
 };
 
 struct SwapChainSupportDetails
@@ -75,11 +68,10 @@ struct CameraBuffer
 
 struct RenderableInfo
 {
-    RenderableInfo(const std::string &renderableName,
-                   const std::string &meshName, const std::string &materialName,
+    RenderableInfo(const std::string &renderableName, const std::string &meshName, const std::string &materialName,
                    glm::mat4 transformMatrix)
-        : renderableName(renderableName), meshName(meshName),
-          materialName(materialName), transformMatrix(transformMatrix)
+        : renderableName(renderableName), meshName(meshName), materialName(materialName),
+          transformMatrix(transformMatrix)
     {
     }
 
@@ -184,18 +176,15 @@ inline constexpr const std::array<Vertex, 2> greenLineVertices = {
 
 inline constexpr const std::array<Vertex, 2> xAxisVertices = {
     Vertex{{0.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
-    Vertex{
-        {Constants::AXES_LENGTH, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+    Vertex{{Constants::AXES_LENGTH, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
 };
 
 inline constexpr const std::array<Vertex, 2> yAxisVertices = {
     Vertex{{0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
-    Vertex{
-        {0.0f, Constants::AXES_LENGTH, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
+    Vertex{{0.0f, Constants::AXES_LENGTH, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
 };
 
 inline constexpr const std::array<Vertex, 2> zAxisVertices = {
     Vertex{{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
-    Vertex{
-        {0.0f, 0.0f, Constants::AXES_LENGTH}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
+    Vertex{{0.0f, 0.0f, Constants::AXES_LENGTH}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
 };

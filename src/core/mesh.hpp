@@ -34,10 +34,7 @@ struct Mesh
     VmaAllocation m_indexBufferAlloc = VK_NULL_HANDLE;
 
     Mesh() = default;
-    Mesh(const std::string &name, VkDevice device)
-        : name(name), m_deviceHandle(device)
-    {
-    }
+    Mesh(const std::string &name, VkDevice device) : name(name), m_deviceHandle(device) {}
 
     bool fromVertices(const Vertex *vertices, size_t count)
     {
@@ -45,8 +42,7 @@ struct Mesh
         {
             if (m_uniqueVertices.count(vertices[i]) == 0)
             {
-                m_uniqueVertices[vertices[i]] =
-                    static_cast<uint32_t>(m_vertices.size());
+                m_uniqueVertices[vertices[i]] = static_cast<uint32_t>(m_vertices.size());
                 m_vertices.emplace_back(vertices[i]);
             }
             m_indices.emplace_back(m_uniqueVertices[vertices[i]]);
@@ -105,17 +101,14 @@ struct Mesh
         return true;
     }
 
-    void upload(VmaAllocator &allocator, VkQueue graphicsQueue,
-                VkCommandPool commandPool)
+    void upload(VmaAllocator &allocator, VkQueue graphicsQueue, VkCommandPool commandPool)
     {
         createVertexBuffer(allocator, graphicsQueue, commandPool);
         createIndexBuffer(allocator, graphicsQueue, commandPool);
     }
 
-    void createIndexBuffer(VmaAllocator &allocator, VkQueue graphicsQueue,
-                           VkCommandPool commandPool);
-    void createVertexBuffer(VmaAllocator &allocator, VkQueue graphicsQueue,
-                            VkCommandPool commandPool);
+    void createIndexBuffer(VmaAllocator &allocator, VkQueue graphicsQueue, VkCommandPool commandPool);
+    void createVertexBuffer(VmaAllocator &allocator, VkQueue graphicsQueue, VkCommandPool commandPool);
 
     void cleanup(VmaAllocator &allocator);
 };

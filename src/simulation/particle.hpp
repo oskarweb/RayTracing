@@ -26,10 +26,8 @@ class Particle : public Node
     };
 
     Particle();
-    Particle(double charge, double mass, bool movable, Types::Vec3d pos,
-             Types::Vec3d vel, Types::OdeMethod method);
-    Particle(double charge, double mass, bool movable,
-             Types::Vec3d affectingForce, Types::Vec3d pos, Types::Vec3d vel);
+    Particle(double charge, double mass, bool movable, Types::Vec3d pos, Types::Vec3d vel, Types::OdeMethod method);
+    Particle(double charge, double mass, bool movable, Types::Vec3d affectingForce, Types::Vec3d pos, Types::Vec3d vel);
 
     Particle(const Particle &) = delete;
     Particle &operator=(const Particle &) = delete;
@@ -40,11 +38,9 @@ class Particle : public Node
     void update(Types::Vec3d affectingForce, double time);
     void update(double time);
     void pushState(uint32_t idx);
-    void pushState(uint32_t &idx, Types::Vec3d &force,
-                   Types::Vec3d &acceleration, Types::Vec3d &velocity,
+    void pushState(uint32_t &idx, Types::Vec3d &force, Types::Vec3d &acceleration, Types::Vec3d &velocity,
                    Types::Vec3d &pos);
-    void pushState(uint32_t &idx, Types::Vec3d &&force,
-                   Types::Vec3d &&acceleration, Types::Vec3d &&velocity,
+    void pushState(uint32_t &idx, Types::Vec3d &&force, Types::Vec3d &&acceleration, Types::Vec3d &&velocity,
                    Types::Vec3d &&pos);
     void setInitialState();
     inline void clearStates() { m_states.clear(); }
@@ -56,45 +52,36 @@ class Particle : public Node
     {
         // F = k * |q1 * q2| / r^2
         Types::Vec3d distanceV = m_pos - other.getPos();
-        return COULOMB_CONSTANT * m_charge * other.getCharge() *
-               distanceV.normalized() / distanceV.length2(distanceSoftening);
+        return COULOMB_CONSTANT * m_charge * other.getCharge() * distanceV.normalized() /
+               distanceV.length2(distanceSoftening);
     }
 
-    inline Types::Vec3d getCoulombForce(uint32_t stateIdx, Particle &other,
-                                        Types::Vec3d distMod)
+    inline Types::Vec3d getCoulombForce(uint32_t stateIdx, Particle &other, Types::Vec3d distMod)
     {
-        Types::Vec3d distanceV =
-            m_states[stateIdx].pos + distMod - other.statesData()[stateIdx].pos;
-        return COULOMB_CONSTANT * m_charge * other.getCharge() *
-               distanceV.normalized() / distanceV.length2(distanceSoftening);
+        Types::Vec3d distanceV = m_states[stateIdx].pos + distMod - other.statesData()[stateIdx].pos;
+        return COULOMB_CONSTANT * m_charge * other.getCharge() * distanceV.normalized() /
+               distanceV.length2(distanceSoftening);
     }
 
     inline Types::Vec3d getCoulombForce(uint32_t stateIdx, Particle &other)
     {
-        Types::Vec3d distanceV =
-            m_states[stateIdx].pos - other.statesData()[stateIdx].pos;
-        return COULOMB_CONSTANT * m_charge * other.getCharge() *
-               distanceV.normalized() / distanceV.length2(distanceSoftening);
+        Types::Vec3d distanceV = m_states[stateIdx].pos - other.statesData()[stateIdx].pos;
+        return COULOMB_CONSTANT * m_charge * other.getCharge() * distanceV.normalized() /
+               distanceV.length2(distanceSoftening);
     }
 
-    inline Types::Vec3d getCoulombForcePosOverwrite(uint32_t stateIdx,
-                                                    Particle &other,
-                                                    Types::Vec3d posOverwrite)
+    inline Types::Vec3d getCoulombForcePosOverwrite(uint32_t stateIdx, Particle &other, Types::Vec3d posOverwrite)
     {
-        Types::Vec3d distanceV =
-            posOverwrite - other.statesData()[stateIdx].pos;
-        return COULOMB_CONSTANT * m_charge * other.getCharge() *
-               distanceV.normalized() / distanceV.length2(distanceSoftening);
+        Types::Vec3d distanceV = posOverwrite - other.statesData()[stateIdx].pos;
+        return COULOMB_CONSTANT * m_charge * other.getCharge() * distanceV.normalized() /
+               distanceV.length2(distanceSoftening);
     }
 
     std::mutex &mutexData() { return *m_statesMutex; }
 
     std::map<uint32_t, State> &statesData() { return m_states; }
 
-    uint32_t getBufferedStepCount() const
-    {
-        return static_cast<uint32_t>(m_states.size());
-    }
+    uint32_t getBufferedStepCount() const { return static_cast<uint32_t>(m_states.size()); }
     void setMaxStep(uint32_t maxStep) { *m_maxStep = maxStep; }
     uint32_t getMaxStep() const { return m_maxStep->load(); }
     State *initialStateData() { return m_initialState.get(); }
@@ -113,14 +100,8 @@ class Particle : public Node
     const Types::Vec3d &getPos() const { return m_pos; }
     void setCharge(double charge) { m_charge = charge; }
     void setMass(double mass) { m_mass = std::clamp(mass, 0.0, 1000.0); };
-    void setAffectingForce(Types::Vec3d affectingForce)
-    {
-        m_affectingForce = affectingForce;
-    }
-    void setAcceleration(Types::Vec3d acceleration)
-    {
-        m_acceleration = acceleration;
-    }
+    void setAffectingForce(Types::Vec3d affectingForce) { m_affectingForce = affectingForce; }
+    void setAcceleration(Types::Vec3d acceleration) { m_acceleration = acceleration; }
     void setVelocity(Types::Vec3d velocity) { m_velocity = velocity; }
     void setPos(Types::Vec3d pos) { m_pos = pos; }
 
@@ -136,19 +117,16 @@ class Particle : public Node
     void setMethodMask(Types::OdeMethod method) { m_method = method; }
     const Types::OdeMethod &getMethodMask() const { return m_method; }
 
-    inline static constexpr const double ELECTRIC_CONSTANT =
-        8.854187817e-12; // [F / m]
-    inline static constexpr const double COULOMB_CONSTANT =
-        8.9875517873681764e9; // 1 / (4 * pi * ELECTRIC_CONSTANT) [N * m^2 /
-                              // C^2]
+    inline static constexpr const double ELECTRIC_CONSTANT = 8.854187817e-12;     // [F / m]
+    inline static constexpr const double COULOMB_CONSTANT = 8.9875517873681764e9; // 1 / (4 * pi * ELECTRIC_CONSTANT) [N
+                                                                                  // * m^2 / C^2]
     inline static constexpr const double DEFAULT_DISTANCE_SOFTENING = 0.6;
     inline static constexpr const double MIN_DISTANCE_SOFTENING = 0.0;
     inline static constexpr const double MAX_DISTANCE_SOFTENING = 1.0;
 
     inline static const std::string &F_VECTOR_MODEL_NAME = "forceVector";
     inline static const std::string &P_MODEL_NAME = "particle";
-    inline static constexpr const glm::vec3 F_VECTOR_OFFEST =
-        glm::vec3(0.0f, 0.0f, 0.0f);
+    inline static constexpr const glm::vec3 F_VECTOR_OFFEST = glm::vec3(0.0f, 0.0f, 0.0f);
 
     inline static double distanceSoftening = DEFAULT_DISTANCE_SOFTENING;
 

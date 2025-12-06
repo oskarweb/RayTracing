@@ -11,9 +11,7 @@ class Renderer
 {
   private:
   public:
-    virtual std::multimap<std::string, Renderable, RenderableComp>::iterator
-        addRenderable(Renderable) = 0;
+    virtual std::multimap<std::string, Renderable, RenderableComp>::iterator addRenderable(Renderable) = 0;
     virtual void addRenderables(Model *) = 0;
-    virtual void removeRenderable(
-        std::multimap<std::string, Renderable, RenderableComp>::iterator &) = 0;
+    virtual void removeRenderable(std::multimap<std::string, Renderable, RenderableComp>::iterator &) = 0;
 };
