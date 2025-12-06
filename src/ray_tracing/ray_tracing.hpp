@@ -14,7 +14,12 @@ class RayTracing
     {
     }
 
+    void run();
+
   private:
+    static inline void framebufferResizeCallback(GLFWwindow *window, int width, int height);
+    void initWindow();
+
     GLFWwindow *m_window = nullptr;
     VulkanRenderer *m_rendererHandle;
     Camera m_camera;

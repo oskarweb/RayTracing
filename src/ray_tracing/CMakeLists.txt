@@ -4,9 +4,11 @@ message(STATUS "Configuring ray tracing subproject: ${RAY_TRACING_SUBPROJECT_NAM
 
 add_executable(${RAY_TRACING_SUBPROJECT_NAME}
     "main.cpp"
+    "ray_tracing.cpp"
+    "ray_tracing.hpp"
 )
 
-target_link_libraries(${RAY_TRACING_SUBPROJECT_NAME} PUBLIC ${CORE_LIB_NAME})
+target_link_libraries(${RAY_TRACING_SUBPROJECT_NAME} PRIVATE ${CORE_LIB_NAME})
 
 set_target_properties(${RAY_TRACING_SUBPROJECT_NAME} PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/${RAY_TRACING_SUBPROJECT_NAME}"

@@ -29,5 +29,5 @@ add_definitions(
 )
 
 add_subdirectory("core")
-add_subdirectory("ray_tracing")
+# add_subdirectory("ray_tracing")
 add_subdirectory("simulation")

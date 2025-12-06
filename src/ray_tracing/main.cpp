@@ -1,7 +1,23 @@
-#include <iostream>
+#include "ray_tracing.hpp"
+
+#include "node.hpp"
+#include "vulkan_renderer.hpp"
 
 int main()
 {
-    std::cout << "ray_tracing" << '\n';
-    return 0;
+    VulkanRenderer renderer{};
+    Node::setRenderer(&renderer);
+    RayTracing app(&renderer);
+
+    try
+    {
+        app.run();
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << e.what() << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    return EXIT_SUCCESS;
 }

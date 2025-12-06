@@ -1,9 +1,17 @@
+#include "ray_tracing.hpp"
+
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_vulkan.h"
 
 #include "implot.h"
 
 #include <cstring>
+
+void RayTracing::framebufferResizeCallback(GLFWwindow *window, int width, int height)
+{
+    RayTracing *app = static_cast<RayTracing *>(glfwGetWindowUserPointer(window));
+    app->m_rendererHandle->notifyFramebufferResized();
+}
 
 void RayTracing::initWindow()
 {
@@ -14,23 +22,6 @@ void RayTracing::initWindow()
     glfwSetWindowSizeLimits(m_window, Constants::WIDTH, Constants::HEIGHT, GLFW_DONT_CARE, GLFW_DONT_CARE);
     glfwSetWindowUserPointer(m_window, this);
     glfwSetFramebufferSizeCallback(m_window, framebufferResizeCallback);
-}
-
-void RayTracing::addParticle(Particle &&particle)
-{
-    auto &particleRef = m_particles.emplace_back(std::move(particle));
-    m_plotSelectedParticle = m_particles.begin();
-}
-
-void RayTracing::removeParticle(std::vector<Particle>::iterator &it)
-{
-    if (it != m_particles.end())
-    {
-        (*it).cleanup();
-        m_particles.erase(it);
-        if (m_particles.size() > 0)
-            m_plotSelectedParticle = m_particles.begin();
-    }
 }
 
 void RayTracing::run()
@@ -72,37 +63,6 @@ void RayTracing::run()
 
         ImPlot::ShowDemoWindow();
         ImGui::ShowDemoWindow();
-
-        if (not m_paused)
-        {
-            if (m_skipUpdate)
-            {
-                m_skipUpdate = false;
-            }
-            else
-            {
-                switch (m_mode)
-                {
-                case SimulationMode::Static:
-                    updateStatic();
-                    break;
-                case SimulationMode::PrecalculatedAll:
-                    updateAllPrecalc();
-                    break;
-                case SimulationMode::Precalculated20Ms:
-                    update20MsPecalc();
-                    break;
-                case SimulationMode::Realtime:
-                    updateRealTime();
-                    break;
-                }
-            }
-        }
-
-        displayMainCtrlWindow();
-        displayParticleListWindow();
-        displayParticleAddWindow();
-        displayPlotWindow();
 
         ImGui::Render();
         m_rendererHandle->recordImguiData(ImGui::GetDrawData());
