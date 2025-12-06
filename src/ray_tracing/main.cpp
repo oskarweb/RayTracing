@@ -1,6 +1,7 @@
 #include <iostream>
 
-int main() {
+int main()
+{
     std::cout << "ray_tracing" << '\n';
-	return 0;
+    return 0;
 }
