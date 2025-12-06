@@ -21,3 +21,5 @@ KeepEmptyLinesAtTheStartOfBlocks: true
 TabWidth:        8
 UseTab:          Never
 ColumnLimit: 120
+AccessModifierOffset: -4
+IndentAccessModifiers: false

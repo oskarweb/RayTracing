@@ -18,7 +18,7 @@
 
 class Simulation
 {
-  public:
+public:
     Simulation(VulkanRenderer *rendererHandle)
         : m_rendererHandle(rendererHandle),
           m_camera(Camera(glm::vec3(-10.0f, -10.0f, -10.0f), 0.0f, 0.0f, glm::vec3(0.0f, 0.0f, 1.0f))),
@@ -63,7 +63,7 @@ class Simulation
         Types::Vec3d velocity = DEFAULT_PARTICLE_VELOCITY;
     };
 
-  private:
+private:
     static inline void framebufferResizeCallback(GLFWwindow *window, int width, int height);
 
     void updateStatic();

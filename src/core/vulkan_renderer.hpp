@@ -34,7 +34,7 @@ using VmaAllocator = VmaAllocator_T *;
 
 class VulkanRenderer : public Renderer
 {
-  public:
+public:
     constexpr const static int MAX_FRAMES_IN_FLIGHT = 3;
 
     VulkanRenderer() = default;
@@ -57,7 +57,7 @@ class VulkanRenderer : public Renderer
     double getDeltaTimeS() const { return m_deltaTime / 1000.0; }
     void notifyFramebufferResized() { m_framebufferResized = true; }
 
-  private:
+private:
     void initImplVulkanImGui();
     void initImgui();
     void cleanupSyncObjects();

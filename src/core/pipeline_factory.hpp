@@ -20,11 +20,11 @@ struct PipelineCreateInfo
 
 class PipelineFactory
 {
-  protected:
+protected:
     VkDevice m_device;
     VkPhysicalDevice m_physicalDevice;
 
-  public:
+public:
     PipelineFactory(VkDevice device, VkPhysicalDevice physicalDevice)
         : m_device(device), m_physicalDevice(physicalDevice)
     {
@@ -34,10 +34,10 @@ class PipelineFactory
 
 class CubePipeline : PipelineFactory
 {
-  public:
+public:
     using PipelineFactory::PipelineFactory;
 
-  private:
+private:
     std::filesystem::path vertPath = Constants::SHADERS_PATH / "cube_vert.spv";
     std::filesystem::path fragPath = Constants::SHADERS_PATH / "cube_frag.spv";
     std::unordered_map<std::string, VkShaderModule> m_shaders;
@@ -48,7 +48,7 @@ class CubePipeline : PipelineFactory
         m_shaders["frag"] = Helpers::createShaderModule(m_device, Helpers::readFile(fragPath));
     }
 
-  public:
+public:
     std::pair<VkPipeline, VkPipelineLayout> create(PipelineCreateInfo info) override
     {
         VkPipeline pipeline;
@@ -190,10 +190,10 @@ class CubePipeline : PipelineFactory
 
 class OutlinePipeline : PipelineFactory
 {
-  public:
+public:
     using PipelineFactory::PipelineFactory;
 
-  private:
+private:
     std::filesystem::path vertPath = Constants::SHADERS_PATH / "outline_vert.spv";
     std::filesystem::path fragPath = Constants::SHADERS_PATH / "outline_frag.spv";
     std::unordered_map<std::string, VkShaderModule> m_shaders;
@@ -204,7 +204,7 @@ class OutlinePipeline : PipelineFactory
         m_shaders["frag"] = Helpers::createShaderModule(m_device, Helpers::readFile(fragPath));
     }
 
-  public:
+public:
     std::pair<VkPipeline, VkPipelineLayout> create(PipelineCreateInfo info) override
     {
         VkPipeline pipeline;
@@ -346,10 +346,10 @@ class OutlinePipeline : PipelineFactory
 
 class LinePipeline : PipelineFactory
 {
-  public:
+public:
     using PipelineFactory::PipelineFactory;
 
-  private:
+private:
     std::filesystem::path vertPath = Constants::SHADERS_PATH / "cube_vert.spv";
     std::filesystem::path fragPath = Constants::SHADERS_PATH / "cube_frag.spv";
     std::unordered_map<std::string, VkShaderModule> m_shaders;
@@ -360,7 +360,7 @@ class LinePipeline : PipelineFactory
         m_shaders["frag"] = Helpers::createShaderModule(m_device, Helpers::readFile(fragPath));
     }
 
-  public:
+public:
     std::pair<VkPipeline, VkPipelineLayout> create(PipelineCreateInfo info) override
     {
         VkPhysicalDeviceFeatures physicalDeviceFeatures;

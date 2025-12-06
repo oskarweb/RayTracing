@@ -5,7 +5,7 @@
 
 class Node
 {
-  public:
+public:
     Node(const Node &) = delete;
     Node &operator=(const Node &) = delete;
     Node(Node &&) noexcept = default;
@@ -17,9 +17,9 @@ class Node
     Model *getModel(const std::string &name);
     virtual void cleanup() = 0;
 
-  protected:
+protected:
     std::map<std::string, std::unique_ptr<Model>> m_models{};
 
-  private:
+private:
     inline static Renderer *rendererHandle = nullptr;
 };

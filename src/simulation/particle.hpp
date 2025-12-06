@@ -16,7 +16,7 @@
 
 class Particle : public Node
 {
-  public:
+public:
     struct State
     {
         Types::Vec3d affectingForce{};
@@ -130,7 +130,7 @@ class Particle : public Node
 
     inline static double distanceSoftening = DEFAULT_DISTANCE_SOFTENING;
 
-  private:
+private:
     Types::OdeMethod m_method = Types::OdeMethod::RK4;
     double m_charge;
     double m_mass;

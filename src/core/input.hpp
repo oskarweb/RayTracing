@@ -7,7 +7,7 @@
 
 class Input
 {
-  public:
+public:
     struct Key
     {
         bool pressed = false;

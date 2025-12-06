@@ -8,7 +8,7 @@ class Trail : public Node
     glm::vec3 m_initialPos;
     glm::vec3 m_lastPos;
 
-  public:
+public:
     Trail(glm::vec3 startPos) : m_initialPos(startPos), m_lastPos(startPos) {}
     void setInitialPos(glm::vec3 pos) { m_initialPos = pos; }
     void setLastPos(glm::vec3 pos) { m_lastPos = pos; }

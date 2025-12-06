@@ -10,7 +10,7 @@
 
 class Camera
 {
-  public:
+public:
     Camera() : m_position(glm::vec3(0.0f, 0.0f, 0.0f)), m_pitch(0.0f), m_yaw(0.0f) {}
 
     Camera(glm::vec3 position, float pitch, float yaw, glm::vec3 up) : m_position(position), m_pitch(pitch), m_yaw(yaw)
@@ -137,7 +137,7 @@ class Camera
     void lock(bool locked) { m_locked = locked; }
     const float &getMaxVelocity() const { return m_maxVelocity; }
 
-  private:
+private:
     bool m_locked = true;
     bool m_lookingAtOrigin = true;
     glm::vec3 m_velocity = glm::vec3(0.0f, 0.0f, 0.0f);
