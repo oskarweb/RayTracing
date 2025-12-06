@@ -1,12 +1,30 @@
 {
-  "name": "RayTracing",
+  "name": "raytracing",
   "version": "1.0.0",
   "dependencies": [
-    "glfw3",
-    "glm",
-    "imgui",
-    "vulkan",
-    "vulkan-memory-allocator"
+    {
+      "name": "glfw3",
+      "version>=": "3.4"
+    },
+    {
+      "name": "vulkan-headers",
+      "version>=": "1.4.328.0"
+    },
+    {
+      "name": "imgui",
+      "version>=": "1.91.9",
+      "features": [
+        "glfw-binding",
+        "vulkan-binding"
+      ]
+    },
+    {
+      "name": "glm"
+    },
+    {
+      "name": "vulkan-memory-allocator",
+      "version>=": "3.3.0"
+    }
   ],
-  "builtin-baseline": "latest"
+  "builtin-baseline": "ab2977be50c702126336e5088f4836060733c899"
 }

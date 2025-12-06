@@ -15,7 +15,7 @@
 #include <map>
 #include <vector>
 
-#define INTEL_AVX2
+// #define INTEL_AVX2
 
 namespace Types
 {

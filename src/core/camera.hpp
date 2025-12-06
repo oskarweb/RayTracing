@@ -141,7 +141,6 @@ private:
     bool m_locked = true;
     bool m_lookingAtOrigin = true;
     glm::vec3 m_velocity = glm::vec3(0.0f, 0.0f, 0.0f);
-    ;
     glm::vec3 m_position;
     glm::vec3 m_target = glm::vec3(0.0f, 0.0f, 0.0f);
     float m_pitch{0.f};
