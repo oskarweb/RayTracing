@@ -396,3 +396,5 @@ FodyWeavers.xsd
 *.sln.iml
 
 build/
+
+.pre-commit-config.yaml
