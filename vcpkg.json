@@ -1,0 +1,12 @@
+{
+  "name": "RayTracing",
+  "version": "1.0.0",
+  "dependencies": [
+    "glfw3",
+    "glm",
+    "imgui",
+    "vulkan",
+    "vulkan-memory-allocator"
+  ],
+  "builtin-baseline": "latest"
+}
