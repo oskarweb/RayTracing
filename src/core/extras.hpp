@@ -206,7 +206,12 @@ struct Vec3d
     {
         return std::sqrt((x() * x() + y() * y() + z() * z()) + softening * softening);
     }
-    inline Vec3d normalized(double softening = 0.0) const { return (softening + *this) / this->length(softening); }
+    inline Vec3d normalized(double softening = 0.0) const
+    {
+        const double len2 = length2(softening);
+        const double invLen = 1.0 / std::sqrt(len2);
+        return Vec3d{x() * invLen, y() * invLen, z() * invLen};
+    }
 
     explicit operator glm::vec3() const { return glm::vec3(x(), y(), z()); }
 

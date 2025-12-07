@@ -51,30 +51,35 @@ public:
     inline Types::Vec3d getCoulombForce(Particle &other) const
     {
         // F = k * |q1 * q2| / r^2
+        // Optimized: F = k * q1 * q2 * r_vec / r^3
         Types::Vec3d distanceV = m_pos - other.getPos();
-        return COULOMB_CONSTANT * m_charge * other.getCharge() * distanceV.normalized() /
-               distanceV.length2(distanceSoftening);
+        const double dist2 = distanceV.length2(distanceSoftening);
+        const double dist3 = dist2 * std::sqrt(dist2);
+        return COULOMB_CONSTANT * m_charge * other.getCharge() * distanceV / dist3;
     }
 
     inline Types::Vec3d getCoulombForce(uint32_t stateIdx, Particle &other, Types::Vec3d distMod)
     {
         Types::Vec3d distanceV = m_states[stateIdx].pos + distMod - other.statesData()[stateIdx].pos;
-        return COULOMB_CONSTANT * m_charge * other.getCharge() * distanceV.normalized() /
-               distanceV.length2(distanceSoftening);
+        const double dist2 = distanceV.length2(distanceSoftening);
+        const double dist3 = dist2 * std::sqrt(dist2);
+        return COULOMB_CONSTANT * m_charge * other.getCharge() * distanceV / dist3;
     }
 
     inline Types::Vec3d getCoulombForce(uint32_t stateIdx, Particle &other)
     {
         Types::Vec3d distanceV = m_states[stateIdx].pos - other.statesData()[stateIdx].pos;
-        return COULOMB_CONSTANT * m_charge * other.getCharge() * distanceV.normalized() /
-               distanceV.length2(distanceSoftening);
+        const double dist2 = distanceV.length2(distanceSoftening);
+        const double dist3 = dist2 * std::sqrt(dist2);
+        return COULOMB_CONSTANT * m_charge * other.getCharge() * distanceV / dist3;
     }
 
     inline Types::Vec3d getCoulombForcePosOverwrite(uint32_t stateIdx, Particle &other, Types::Vec3d posOverwrite)
     {
         Types::Vec3d distanceV = posOverwrite - other.statesData()[stateIdx].pos;
-        return COULOMB_CONSTANT * m_charge * other.getCharge() * distanceV.normalized() /
-               distanceV.length2(distanceSoftening);
+        const double dist2 = distanceV.length2(distanceSoftening);
+        const double dist3 = dist2 * std::sqrt(dist2);
+        return COULOMB_CONSTANT * m_charge * other.getCharge() * distanceV / dist3;
     }
 
     std::mutex &mutexData() { return *m_statesMutex; }

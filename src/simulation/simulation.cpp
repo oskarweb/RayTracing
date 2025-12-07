@@ -259,9 +259,11 @@ void Simulation::calculateSteps(uint32_t startingStep)
 Types::Vec3d Simulation::calcForce(uint32_t stateId, Particle &particle, Types::Vec3d distanceMod)
 {
     Types::Vec3d force{0.0};
+    const uint64_t particleId = particle.getId();
+    const Types::OdeMethod particleMethod = particle.getMethodMask();
     for (auto &particleOther : m_particles)
     {
-        if ((particle.getId() != particleOther.getId()) && (particle.getMethodMask() == particleOther.getMethodMask()))
+        if ((particleId != particleOther.getId()) && (particleMethod == particleOther.getMethodMask()))
         {
             force += particle.getCoulombForce(stateId, particleOther, distanceMod);
         }
@@ -272,9 +274,11 @@ Types::Vec3d Simulation::calcForce(uint32_t stateId, Particle &particle, Types::
 Types::Vec3d Simulation::calcForcePosOverride(uint32_t stateId, Particle &particle, Types::Vec3d posOverride)
 {
     Types::Vec3d force{0.0};
+    const uint64_t particleId = particle.getId();
+    const Types::OdeMethod particleMethod = particle.getMethodMask();
     for (auto &particleOther : m_particles)
     {
-        if ((particle.getId() != particleOther.getId()) && (particle.getMethodMask() == particleOther.getMethodMask()))
+        if ((particleId != particleOther.getId()) && (particleMethod == particleOther.getMethodMask()))
         {
             force += particle.getCoulombForcePosOverwrite(stateId, particleOther, posOverride);
         }
@@ -441,9 +445,10 @@ void Simulation::updateStatic()
     for (auto &particle : m_particles)
     {
         Types::Vec3d force{0.0};
+        const uint64_t particleId = particle.getId();
         for (auto &particle_other : m_particles)
         {
-            if (particle.getId() != particle_other.getId())
+            if (particleId != particle_other.getId())
             {
                 force += particle.getCoulombForce(0, particle_other);
             }
@@ -502,13 +507,16 @@ void Simulation::updateRealTime()
 {
     for (auto &particle : m_particles)
     {
+        Types::Vec3d force{0.0};
+        const uint64_t particleId = particle.getId();
         for (auto &particleOther : m_particles)
         {
-            if (particle.getId() != particleOther.getId())
+            if (particleId != particleOther.getId())
             {
-                particle.setAffectingForce(particle.getCoulombForce(particleOther));
+                force += particle.getCoulombForce(particleOther);
             }
         }
+        particle.setAffectingForce(force);
         if (particle.isMovable())
         {
             particle.update(m_rendererHandle->getDeltaTime());
@@ -929,27 +937,32 @@ void Simulation::displayPlotWindow()
         ImGui::EndCombo();
     }
 
-    std::vector<double> posX{};
-    std::vector<double> velX{};
-    std::vector<double> forceX{};
-    std::vector<double> time{};
+    // Pre-allocate vectors to avoid repeated allocations
+    const size_t stateCount = (*m_plotSelectedParticle).statesData().size();
+    std::vector<double> posX;
+    std::vector<double> velX;
+    std::vector<double> forceX;
+    std::vector<double> time;
+    posX.reserve(stateCount);
+    velX.reserve(stateCount);
+    forceX.reserve(stateCount);
+    time.reserve(stateCount);
 
     double posXmin = 0.0;
     double posXmax = 0.0;
 
     for (auto &[stepId, state] : (*m_plotSelectedParticle).statesData())
     {
+        if (stepId > m_maxUsedStep)
+        {
+            break;
+        }
         // posXmin = std::min(posXmin, state.pos.x);
         // posXmax = std::max(posXmax, state.pos.x);
         posX.push_back(state.pos.x());
         velX.push_back(state.velocity.x());
         forceX.push_back(state.affectingForce.x());
         time.push_back(stepId * m_timeStep);
-
-        if (stepId > m_maxUsedStep)
-        {
-            break;
-        }
     }
 
     if (posX.size() == 0)
