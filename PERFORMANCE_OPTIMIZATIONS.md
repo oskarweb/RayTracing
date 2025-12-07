@@ -10,9 +10,9 @@ Multiple performance bottlenecks were identified and fixed in the physics simula
 
 ### 1. Vec3d Operations (src/core/extras.hpp)
 
-**Problem**: The `normalized()` method was inefficiently computing the vector length twice by calling both addition and division operations with softening parameter.
+**Problem**: The `normalized()` method was computing length and then dividing by it, which could be optimized.
 
-**Solution**: Rewrote `normalized()` to compute `length2()` once, then calculate the inverse square root directly:
+**Solution**: Rewrote `normalized()` to compute `length2()` once, then calculate the inverse square root directly, and added safety check for zero-length vectors:
 
 ```cpp
 // Before:
@@ -23,12 +23,13 @@ inline Vec3d normalized(double softening = 0.0) const {
 // After:
 inline Vec3d normalized(double softening = 0.0) const {
     const double len2 = length2(softening);
+    if (len2 < 1e-30) return Vec3d{0.0, 0.0, 0.0};
     const double invLen = 1.0 / std::sqrt(len2);
     return Vec3d{x() * invLen, y() * invLen, z() * invLen};
 }
 ```
 
-**Impact**: Eliminates redundant calculations and improves cache locality.
+**Impact**: Eliminates redundant calculations and adds safety check. Note: This method is no longer called in hot paths after Coulomb force optimizations.
 
 ### 2. Coulomb Force Calculations (src/simulation/particle.hpp)
 

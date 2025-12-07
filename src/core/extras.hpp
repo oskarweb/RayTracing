@@ -208,7 +208,13 @@ struct Vec3d
     }
     inline Vec3d normalized(double softening = 0.0) const
     {
+        // Note: This method is optimized for non-zero vectors.
+        // Softening parameter is applied to the length calculation to avoid division by zero.
         const double len2 = length2(softening);
+        if (len2 < 1e-30) {
+            // Return zero vector for near-zero length vectors
+            return Vec3d{0.0, 0.0, 0.0};
+        }
         const double invLen = 1.0 / std::sqrt(len2);
         return Vec3d{x() * invLen, y() * invLen, z() * invLen};
     }

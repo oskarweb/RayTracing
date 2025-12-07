@@ -956,12 +956,12 @@ void Simulation::displayPlotWindow()
     double posXmin = 0.0;
     double posXmax = 0.0;
 
-    for (auto &[stepId, state] : (*m_plotSelectedParticle).statesData())
+    // Iterate only up to m_maxUsedStep for efficiency
+    auto &states = (*m_plotSelectedParticle).statesData();
+    auto endIt = states.upper_bound(m_maxUsedStep);
+    for (auto it = states.begin(); it != endIt; ++it)
     {
-        if (stepId > m_maxUsedStep)
-        {
-            break;
-        }
+        const auto &[stepId, state] = *it;
         // posXmin = std::min(posXmin, state.pos.x);
         // posXmax = std::max(posXmax, state.pos.x);
         posX.push_back(state.pos.x());
