@@ -211,7 +211,10 @@ struct Vec3d
         // Note: This method is optimized for non-zero vectors.
         // Softening parameter is applied to the length calculation to avoid division by zero.
         const double len2 = length2(softening);
-        if (len2 < 1e-30) {
+        // Check for near-zero length, accounting for softening
+        // Use epsilon relative to softening or a small absolute value
+        const double epsilon = std::max(1e-30, softening * softening * 1e-12);
+        if (len2 < epsilon) {
             // Return zero vector for near-zero length vectors
             return Vec3d{0.0, 0.0, 0.0};
         }

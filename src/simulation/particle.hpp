@@ -54,7 +54,8 @@ public:
         // Optimized: F = k * q1 * q2 * r_vec / r^3
         Types::Vec3d distanceV = m_pos - other.getPos();
         const double dist2 = distanceV.length2(distanceSoftening);
-        const double dist3 = dist2 * std::sqrt(dist2);
+        const double dist = std::sqrt(dist2);
+        const double dist3 = dist * dist2;
         return COULOMB_CONSTANT * m_charge * other.getCharge() * distanceV / dist3;
     }
 
@@ -62,7 +63,8 @@ public:
     {
         Types::Vec3d distanceV = m_states[stateIdx].pos + distMod - other.statesData()[stateIdx].pos;
         const double dist2 = distanceV.length2(distanceSoftening);
-        const double dist3 = dist2 * std::sqrt(dist2);
+        const double dist = std::sqrt(dist2);
+        const double dist3 = dist * dist2;
         return COULOMB_CONSTANT * m_charge * other.getCharge() * distanceV / dist3;
     }
 
@@ -70,7 +72,8 @@ public:
     {
         Types::Vec3d distanceV = m_states[stateIdx].pos - other.statesData()[stateIdx].pos;
         const double dist2 = distanceV.length2(distanceSoftening);
-        const double dist3 = dist2 * std::sqrt(dist2);
+        const double dist = std::sqrt(dist2);
+        const double dist3 = dist * dist2;
         return COULOMB_CONSTANT * m_charge * other.getCharge() * distanceV / dist3;
     }
 
@@ -78,7 +81,8 @@ public:
     {
         Types::Vec3d distanceV = posOverwrite - other.statesData()[stateIdx].pos;
         const double dist2 = distanceV.length2(distanceSoftening);
-        const double dist3 = dist2 * std::sqrt(dist2);
+        const double dist = std::sqrt(dist2);
+        const double dist3 = dist * dist2;
         return COULOMB_CONSTANT * m_charge * other.getCharge() * distanceV / dist3;
     }
 
