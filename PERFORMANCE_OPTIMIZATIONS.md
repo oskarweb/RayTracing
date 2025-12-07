@@ -43,7 +43,8 @@ return COULOMB_CONSTANT * m_charge * other.getCharge() * distanceV.normalized() 
 
 // After:
 const double dist2 = distanceV.length2(distanceSoftening);
-const double dist3 = dist2 * std::sqrt(dist2);
+const double dist = std::sqrt(dist2);
+const double dist3 = dist * dist2;  // Compute as sqrt(r²) * r² for numerical stability
 return COULOMB_CONSTANT * m_charge * other.getCharge() * distanceV / dist3;
 ```
 
@@ -175,7 +176,22 @@ Overall simulation performance improvement: **Estimated 20-30%** for typical par
 
 3. **Parallel Force Calculations**: The threaded calculation path exists but could be further optimized with better work distribution and reduced lock contention.
 
-4. **State Storage**: Consider using std::vector instead of std::map for states if sequential access patterns dominate, improving cache locality.
+4. **State Storage**: The current implementation uses `std::map<uint32_t, State>` for particle states. This choice enables:
+   - Sparse storage (only active timesteps are stored)
+   - Efficient state cleanup using `std::erase_if()` in `update20MsPecalc()`
+   - O(log n) lookup for specific timesteps
+   
+   **Trade-off**: `std::vector` would provide better cache locality for sequential access, but would require:
+   - Dense storage (all timesteps from 0 to max)
+   - More complex cleanup logic
+   - Potential memory overhead for long simulations
+   
+   **Recommendation**: Consider `std::vector` if:
+   - Sequential access dominates (>90% of lookups)
+   - Memory for all timesteps is acceptable
+   - Timestep cleanup is not needed
+   
+   Otherwise, current `std::map` is appropriate. The plot rendering optimization (using `upper_bound()`) helps mitigate map iteration overhead.
 
 ## Testing Recommendations
 

@@ -19,6 +19,10 @@
 
 namespace Types
 {
+// Numerical stability constants for vector operations
+constexpr double NORMALIZED_MIN_LENGTH_SQ = 1e-30;           // Absolute minimum length squared
+constexpr double SOFTENING_EPSILON_RELATIVE_SCALE = 1e-12;  // Scale factor for softening-relative epsilon
+
 struct Vec3d
 {
 #ifdef INTEL_AVX2
@@ -211,9 +215,9 @@ struct Vec3d
         // Note: This method is optimized for non-zero vectors.
         // Softening parameter is applied to the length calculation to avoid division by zero.
         const double len2 = length2(softening);
-        // Check for near-zero length, accounting for softening
-        // Use epsilon relative to softening or a small absolute value
-        const double epsilon = std::max(1e-30, softening * softening * 1e-12);
+        // Check for near-zero length with adaptive epsilon based on softening
+        const double epsilon = std::max(NORMALIZED_MIN_LENGTH_SQ, 
+                                       softening * softening * SOFTENING_EPSILON_RELATIVE_SCALE);
         if (len2 < epsilon) {
             // Return zero vector for near-zero length vectors
             return Vec3d{0.0, 0.0, 0.0};
