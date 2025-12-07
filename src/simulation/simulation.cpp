@@ -158,9 +158,10 @@ void Simulation::calculatePositionsForSingleParticle(Particle *particle)
     std::unique_lock<std::mutex> lk(particle->mutexData());
 
     Types::Vec3d force{0.0};
+    const uint64_t particleId = particle->getId();
     for (auto &particleOther : m_particles)
     {
-        if (particle->getId() != particleOther.getId())
+        if (particleId != particleOther.getId())
         {
             force += particle->getCoulombForce(stepIdx - 1, particleOther);
         }
@@ -192,26 +193,30 @@ void Simulation::calculateParticlePositions(bool all)
 
 void Simulation::rk4Step(uint32_t stepIdx, Particle &particle)
 {
-    Types::Vec3d k1r = m_timeStep * particle.statesData()[stepIdx - 1].velocity;
-    Types::Vec3d k1v = m_timeStep * particle.statesData()[stepIdx - 1].acceleration;
-    Types::Vec3d k2r = m_timeStep * (particle.statesData()[stepIdx - 1].velocity + k1v / 2.0);
-    Types::Vec3d k2v = m_timeStep * calcForce(stepIdx - 1, particle, k1r / 2.0) / particle.getMass();
-    Types::Vec3d k3r = m_timeStep * (particle.statesData()[stepIdx - 1].velocity + k2v / 2.0);
-    Types::Vec3d k3v = m_timeStep * calcForce(stepIdx - 1, particle, k2r / 2.0) / particle.getMass();
-    Types::Vec3d k4r = m_timeStep * (particle.statesData()[stepIdx - 1].velocity + k3v);
-    Types::Vec3d k4v = m_timeStep * calcForce(stepIdx - 1, particle, k3r) / particle.getMass();
-    auto pos = particle.statesData()[stepIdx - 1].pos + (k1r + 2.0 * k2r + 2.0 * k3r + k4r) / 6.0;
-    auto vel = particle.statesData()[stepIdx - 1].velocity + (k1v + 2.0 * k2v + 2.0 * k3v + k4v) / 6.0;
+    const auto &prevState = particle.statesData()[stepIdx - 1];
+    const double mass = particle.getMass();
+    const double invMass = 1.0 / mass;
+    
+    Types::Vec3d k1r = m_timeStep * prevState.velocity;
+    Types::Vec3d k1v = m_timeStep * prevState.acceleration;
+    Types::Vec3d k2r = m_timeStep * (prevState.velocity + k1v / 2.0);
+    Types::Vec3d k2v = m_timeStep * calcForce(stepIdx - 1, particle, k1r / 2.0) * invMass;
+    Types::Vec3d k3r = m_timeStep * (prevState.velocity + k2v / 2.0);
+    Types::Vec3d k3v = m_timeStep * calcForce(stepIdx - 1, particle, k2r / 2.0) * invMass;
+    Types::Vec3d k4r = m_timeStep * (prevState.velocity + k3v);
+    Types::Vec3d k4v = m_timeStep * calcForce(stepIdx - 1, particle, k3r) * invMass;
+    auto pos = prevState.pos + (k1r + 2.0 * k2r + 2.0 * k3r + k4r) / 6.0;
+    auto vel = prevState.velocity + (k1v + 2.0 * k2v + 2.0 * k3v + k4v) / 6.0;
     auto force = calcForcePosOverride(stepIdx - 1, particle, pos);
-    auto acc = force / particle.getMass();
+    auto acc = force * invMass;
     particle.pushState(stepIdx, force, acc, vel, pos);
 }
 
 void Simulation::forwardEulerStep(uint32_t stepIdx, Particle &particle)
 {
-    auto pos = particle.statesData()[stepIdx - 1].pos + m_timeStep * particle.statesData()[stepIdx - 1].velocity;
-    auto vel =
-        particle.statesData()[stepIdx - 1].velocity + m_timeStep * particle.statesData()[stepIdx - 1].acceleration;
+    const auto &prevState = particle.statesData()[stepIdx - 1];
+    auto pos = prevState.pos + m_timeStep * prevState.velocity;
+    auto vel = prevState.velocity + m_timeStep * prevState.acceleration;
     auto force = calcForcePosOverride(stepIdx - 1, particle, pos);
     auto acc = force / particle.getMass();
     particle.pushState(stepIdx, force, acc, vel, pos);
@@ -219,12 +224,12 @@ void Simulation::forwardEulerStep(uint32_t stepIdx, Particle &particle)
 
 void Simulation::leapfrogStep(uint32_t stepIdx, Particle &particle)
 {
-    auto pos = particle.statesData()[stepIdx - 1].pos + m_timeStep * particle.statesData()[stepIdx - 1].velocity +
-               0.5 * m_timeStep * m_timeStep * particle.statesData()[stepIdx - 1].acceleration;
+    const auto &prevState = particle.statesData()[stepIdx - 1];
+    const double timeStep2 = m_timeStep * m_timeStep;
+    auto pos = prevState.pos + m_timeStep * prevState.velocity + 0.5 * timeStep2 * prevState.acceleration;
     auto force = calcForcePosOverride(stepIdx - 1, particle, pos);
     auto acc = force / particle.getMass();
-    auto vel = particle.statesData()[stepIdx - 1].velocity +
-               0.5 * m_timeStep * (particle.statesData()[stepIdx - 1].acceleration + acc);
+    auto vel = prevState.velocity + 0.5 * m_timeStep * (prevState.acceleration + acc);
     particle.pushState(stepIdx, force, acc, vel, pos);
 }
 
