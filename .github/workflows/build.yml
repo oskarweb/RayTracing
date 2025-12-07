@@ -7,7 +7,7 @@ on:
     branches: [ "master" ]
 
 env:
-  VCPKG_ROOT: ${{github.workspace}}/vcpkg
+  VCPKG_ROOT: ${{github.workspace}}/build-workspace/vcpkg
 
 jobs:
   build:
@@ -23,6 +23,12 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 0
+
+      - name: Prepare workspace
+        run: |
+          mkdir -p ${{github.workspace}}/build-workspace
+          rsync -a ${{github.workspace}}/.github/vcpkg.json ${{github.workspace}}/build-workspace/
+          rsync -a --exclude '.github/' ${{github.workspace}}/* ${{github.workspace}}/build-workspace/
 
       - uses: lukka/get-cmake@latest
 
@@ -52,11 +58,12 @@ jobs:
       - name: Setup vcpkg
         uses: lukka/run-vcpkg@v11
         with:
-          vcpkgJsonGlob: '**/vcpkg.json'
+          vcpkgDirectory: '${{github.workspace}}/.github/vcpkg' 
 
       - name: Build
         uses: lukka/run-cmake@v10
         with:
+          cmakeListsTxtPath: '${{github.workspace}}/build-workspace/CMakeLists.txt'
           configurePreset: 'ninja-multi-vcpkg'
           buildPreset: 'ninja-multi-vcpkg'
           buildPresetAdditionalArgs: "['--config Release']"
