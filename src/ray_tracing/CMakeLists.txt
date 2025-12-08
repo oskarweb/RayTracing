@@ -4,6 +4,8 @@ message(STATUS "Configuring ray tracing subproject: ${RAY_TRACING_SUBPROJECT_NAM
 
 add_executable(${RAY_TRACING_SUBPROJECT_NAME}
     "main.cpp"
+    "body.cpp"
+    "body.hpp"
     "ray_tracing.cpp"
     "ray_tracing.hpp"
 )

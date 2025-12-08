@@ -165,9 +165,12 @@ void VulkanRenderer::init()
     auto [linePipeline, linePipelineLayout] = LinePipeline(m_device, m_physicalDevice).create(pipelineCreateInfo);
     auto [outlinePipeline, outlinePipelineLayout] =
         OutlinePipeline(m_device, m_physicalDevice).create(pipelineCreateInfo);
+    auto [paraboloidPipeline, paraboloidPipelineLayout] =
+        ParaboloidPipeline(m_device, m_physicalDevice).create(pipelineCreateInfo);
     m_materials["outline"] = Material("outline", outlinePipeline, outlinePipelineLayout);
     m_materials["cube"] = Material("cube", cubePipeline, cubePipelineLayout);
     m_materials["line"] = Material("line", linePipeline, linePipelineLayout);
+    m_materials["paraboloid"] = Material("paraboloid", paraboloidPipeline, paraboloidPipelineLayout);
     createCommandPool();
     createColorResources();
     createDepthResources();
@@ -200,9 +203,10 @@ void VulkanRenderer::init()
     createUniformBuffers();
     createDescriptorPool();
     createDescriptorSets();
-    createCommandBuffers();
     createSyncObjects();
+    createCommandBuffers();
     initImgui();
+    m_lastFrameTime = std::chrono::high_resolution_clock::now();
 }
 
 void VulkanRenderer::initImplVulkanImGui()
@@ -1635,15 +1639,35 @@ std::multimap<std::string, Renderable, RenderableComp>::iterator VulkanRenderer:
 
 void VulkanRenderer::addRenderables(Model *model)
 {
-    for (RenderableInfo &info : model->renderableInfos)
+    for (RenderableInfo &info : model->_renderableInfos)
     {
-        model->renderables.emplace(info.renderableName,
-                                   addRenderable(Renderable{getMesh(info.meshName), getMaterial(info.materialName),
-                                                            info.transformMatrix, nullptr, 0ull}));
+        model->_renderables.emplace(info.renderableName,
+                                    addRenderable(Renderable{getMesh(info.meshName), getMaterial(info.materialName),
+                                                             info.transformMatrix, nullptr, 0ull}));
     }
 }
 
 void VulkanRenderer::removeRenderable(std::multimap<std::string, Renderable, RenderableComp>::iterator &it)
 {
     m_renderableObjects.erase(it);
+}
+
+std::string VulkanRenderer::createParaboloid(std::string meshName, int nx, int nz,
+                                             const std::function<double(double, double)> &formula)
+{
+    if (getMesh(meshName) != nullptr)
+    {
+        meshName.append("1");
+    }
+    while (getMesh(meshName) != nullptr)
+    {
+        meshName.back() += 1;
+    }
+    auto paraboloidVertices =
+        generateParaboloidVertices(nx, nz, -1.0, 1.0, -1.0, 1.0, glm::vec3{1.0, 0.0, 0.0}, formula);
+    m_meshes.emplace(meshName, Mesh(meshName, m_device));
+    m_meshes[meshName].fromVertices(paraboloidVertices.data(), paraboloidVertices.size());
+    m_meshes[meshName].upload(m_allocator, m_graphicsQueue, m_commandPool);
+
+    return meshName;
 }

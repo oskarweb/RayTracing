@@ -126,7 +126,7 @@ public:
 
     inline static const std::string &F_VECTOR_MODEL_NAME = "forceVector";
     inline static const std::string &P_MODEL_NAME = "particle";
-    inline static constexpr const glm::vec3 F_VECTOR_OFFEST = glm::vec3(0.0f, 0.0f, 0.0f);
+    inline static constexpr const glm::vec3 F_VECTOR_OFFSET = glm::vec3(0.0f, 0.0f, 0.0f);
 
     inline static double distanceSoftening = DEFAULT_DISTANCE_SOFTENING;
 

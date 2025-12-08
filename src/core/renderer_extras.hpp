@@ -2,6 +2,8 @@
 
 #include "mesh.hpp"
 
+#include <functional>
+
 struct VmaAllocation_T;
 using VmaAllocation = VmaAllocation_T *;
 
@@ -188,3 +190,44 @@ inline constexpr const std::array<Vertex, 2> zAxisVertices = {
     Vertex{{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
     Vertex{{0.0f, 0.0f, Constants::AXES_LENGTH}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
 };
+
+inline std::vector<Vertex> generateParaboloidVertices(int nx, int nz, double xmin, double xmax, double zmin,
+                                                      double zmax, glm::vec3 color,
+                                                      const std::function<double(double, double)> &formula)
+{
+    int tris = (nx - 1) * (nz - 1) * 2;
+    int verts = tris * 3;
+
+    std::vector<Vertex> mesh(verts);
+
+    double dx = (xmax - xmin) / double(nx - 1);
+    double dz = (zmax - zmin) / double(nz - 1);
+
+    int idx = 0;
+
+    for (int i = 0; i < nx - 1; i++)
+    {
+        for (int j = 0; j < nz - 1; j++)
+        {
+            double x0 = xmin + i * dx;
+            double x1 = xmin + (i + 1) * dx;
+            double z0 = zmin + j * dz;
+            double z1 = zmin + (j + 1) * dz;
+
+            double y00 = formula(x0, z0);
+            double y10 = formula(x1, z0);
+            double y01 = formula(x0, z1);
+            double y11 = formula(x1, z1);
+
+            mesh[idx++] = Vertex{{x0, -y00, z0}, color, {0.0f, 0.0f}};
+            mesh[idx++] = Vertex{{x1, -y10, z0}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}};
+            mesh[idx++] = Vertex{{x0, -y01, z1}, {0.0f, 1.0f, 1.0f}, {0.0f, 0.0f}};
+
+            mesh[idx++] = Vertex{{x1, -y10, z0}, color, {0.0f, 0.0f}};
+            mesh[idx++] = Vertex{{x1, -y11, z1}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}};
+            mesh[idx++] = Vertex{{x0, -y01, z1}, {0.0f, 1.0f, 1.0f}, {0.0f, 0.0f}};
+        }
+    }
+
+    return mesh;
+}

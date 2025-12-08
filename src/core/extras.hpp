@@ -234,7 +234,7 @@ inline double operator*(const Vec3d &a, const Vec3d &b)
     return _mm_cvtsd_f64(dot);
 }
 #else
-inline double operator*(const Vec3d &a, const Vec3d &b) { return a.x() * b.x() + a.y() * b.y() + a.z() * b.z(); }
+// inline double operator*(const Vec3d &a, const Vec3d &b) { return a.x() * b.x() + a.y() * b.y() + a.z() * b.z(); }
 #endif
 
 struct ImGuiWindowInfo
