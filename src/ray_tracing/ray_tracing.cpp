@@ -51,15 +51,12 @@ void RayTracing::run()
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
     AxesModel axes(glm::vec3(0.0f));
-    m_rendererHandle->addRenderables(&axes);
     const std::string &paraboloidMeshName = m_rendererHandle->createParaboloid(
         "paraboloid", 20, 20, [](double x, double y) -> double { return y * y / 2 - x * x / 3; });
     const std::string &paraboloidMeshName2 = m_rendererHandle->createParaboloid(
         "paraboloid", 20, 20, [](double x, double y) -> double { return y * y / 0.1 - x * x / 0.01; });
     ParaboloidModel plane(glm::vec3(0.0f), glm::vec3(10.0f, 3.0f, 10.0f), paraboloidMeshName);
     ParaboloidModel plane2(glm::vec3(0.0f, 10.0f, 0.0f), glm::vec3(10.0f, 3.0f, 10.0f), paraboloidMeshName2);
-    m_rendererHandle->addRenderables(&plane);
-    m_rendererHandle->addRenderables(&plane2);
 
     // Body body{Types::Vec3d(0.0, -5.0, 0.0), Types::Vec3d(1.0, 0.0, 1.0)};
 

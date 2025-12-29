@@ -7,6 +7,7 @@
 #include "pipeline_factory.hpp"
 #include "renderer.hpp"
 #include "renderer_extras.hpp"
+#include "sparse_set.hpp"
 #include "vertex.hpp"
 
 #define GLFW_INCLUDE_VULKAN
@@ -78,11 +79,11 @@ public:
     void init();
     void newFrame();
     void recordImguiData(ImDrawData *data);
-    Material *getMaterial(const std::string &name);
-    Mesh *getMesh(const std::string &name);
-    std::multimap<std::string, Renderable, RenderableComp>::iterator addRenderable(Renderable renderable) override;
-    void addRenderables(Model *model) override;
-    void removeRenderable(std::multimap<std::string, Renderable, RenderableComp>::iterator &it) override;
+    SparseSet<Material>::Handle getMaterial(const std::string &name) override;
+    SparseSet<Mesh>::Handle getMesh(const std::string &name) override;
+    SparseSet<RenderObject>::Handle addRenderObject(RenderObject obj) override;
+    // void addRenderables(Model *model) override;
+    void removeRenderObject(SparseSet<RenderObject>::Handle handle) override;
     void cleanup();
     const int &getFramebufferWidth() const { return m_framebufferWidth; }
     const int &getFramebufferHeight() const { return m_frameBufferHeight; }
@@ -91,6 +92,7 @@ public:
     void notifyFramebufferResized() { m_framebufferResized = true; }
     std::string createParaboloid(std::string meshName, int nx, int nz,
                                  const std::function<double(double, double)> &formula);
+    RenderObject *getRenderObject(SparseSet<RenderObject>::Handle handle) override;
 
 private:
     void initImplVulkanImGui();
@@ -152,11 +154,13 @@ private:
     static void framebufferResizeCallback(GLFWwindow *window, int width, int height);
     void drawObjects(VkCommandBuffer &commandBuffer);
 
-    std::multimap<std::string, Renderable, RenderableComp> m_renderableObjects{};
-    uint64_t m_currentRenderableId = 0;
-    std::unordered_map<std::string, Mesh> m_meshes{};
-    std::unordered_map<std::string, Material> m_materials{};
+    SparseSet<RenderObject> m_renderObjects;
+    SparseSet<Mesh> m_meshes;
+    SparseSet<Material> m_materials;
     std::vector<Texture> m_textures{};
+
+    std::map<std::string, SparseSet<Mesh>::Handle> m_meshHandles{};
+    std::map<std::string, SparseSet<Material>::Handle> m_materialHandles{};
 
     std::vector<Mesh> testMesh{};
 

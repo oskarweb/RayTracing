@@ -1,6 +1,7 @@
 #pragma once
 
 #include "renderer_extras.hpp"
+#include "sparse_set.hpp"
 
 #include <map>
 #include <string>
@@ -11,7 +12,9 @@ class Renderer
 {
 private:
 public:
-    virtual std::multimap<std::string, Renderable, RenderableComp>::iterator addRenderable(Renderable) = 0;
-    virtual void addRenderables(Model *) = 0;
-    virtual void removeRenderable(std::multimap<std::string, Renderable, RenderableComp>::iterator &) = 0;
+    virtual SparseSet<RenderObject>::Handle addRenderObject(RenderObject obj) = 0;
+    virtual void removeRenderObject(SparseSet<RenderObject>::Handle handle) = 0;
+    virtual SparseSet<Material>::Handle getMaterial(const std::string &name) = 0;
+    virtual SparseSet<Mesh>::Handle getMesh(const std::string &name) = 0;
+    virtual RenderObject *getRenderObject(SparseSet<RenderObject>::Handle handle) = 0;
 };

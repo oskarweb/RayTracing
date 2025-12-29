@@ -1,18 +1,16 @@
 #include "node.hpp"
 
-void Node::setRenderer(Renderer *renderer) { rendererHandle = renderer; }
-
 void Node::cleanup()
 {
     for (auto &[name, model] : m_models)
     {
-        model->cleanup(rendererHandle);
+        model->cleanup();
     }
 }
 
 void Node::uploadModel(const std::string &name, std::unique_ptr<Model> model)
 {
-    rendererHandle->addRenderables(model.get());
+    // BaseObject::rendererHandle->addRenderables(model.get());
     m_models.insert({name, std::move(model)});
 }
 

@@ -3,6 +3,7 @@ set(CORE_LIB_NAME "core" CACHE INTERNAL "")
 message(STATUS "Configuring core library: ${CORE_LIB_NAME}")
 
 add_library(${CORE_LIB_NAME} STATIC
+    "base_object.hpp"
     "camera.hpp"
     "extras.hpp"
     "extras.cpp"
@@ -16,6 +17,7 @@ add_library(${CORE_LIB_NAME} STATIC
     "pipeline_factory.hpp"
     "renderer.hpp"
     "renderer_extras.hpp"
+    "sparse_set.hpp"
     "trail.cpp"
     "trail.hpp"
     "vertex.hpp"

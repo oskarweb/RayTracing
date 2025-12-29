@@ -22,7 +22,6 @@ using VmaAllocation = VmaAllocation_T *;
 
 struct Mesh
 {
-    std::string name = "default";
     std::vector<Vertex> m_vertices{};
     std::vector<uint32_t> m_indices{};
     std::unordered_map<Vertex, uint32_t> m_uniqueVertices{};
@@ -34,7 +33,7 @@ struct Mesh
     VmaAllocation m_indexBufferAlloc = VK_NULL_HANDLE;
 
     Mesh() = default;
-    Mesh(const std::string &name, VkDevice device) : name(name), m_deviceHandle(device) {}
+    Mesh(VkDevice device) : m_deviceHandle(device) {}
 
     bool fromVertices(const Vertex *vertices, size_t count)
     {

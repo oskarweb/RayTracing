@@ -17,6 +17,7 @@
 #include <fstream>
 #include <iostream>
 #include <limits>
+#include <numeric>
 #include <optional>
 #include <set>
 #include <stdexcept>
@@ -167,39 +168,29 @@ void VulkanRenderer::init()
         OutlinePipeline(m_device, m_physicalDevice).create(pipelineCreateInfo);
     auto [paraboloidPipeline, paraboloidPipelineLayout] =
         ParaboloidPipeline(m_device, m_physicalDevice).create(pipelineCreateInfo);
-    m_materials["outline"] = Material("outline", outlinePipeline, outlinePipelineLayout);
-    m_materials["cube"] = Material("cube", cubePipeline, cubePipelineLayout);
-    m_materials["line"] = Material("line", linePipeline, linePipelineLayout);
-    m_materials["paraboloid"] = Material("paraboloid", paraboloidPipeline, paraboloidPipelineLayout);
+    m_materialHandles["outline"] = m_materials.insert(Material{outlinePipeline, outlinePipelineLayout});
+    m_materialHandles["cube"] = m_materials.insert(Material{cubePipeline, cubePipelineLayout});
+    m_materialHandles["line"] = m_materials.insert(Material{linePipeline, linePipelineLayout});
+    m_materialHandles["paraboloid"] = m_materials.insert(Material{paraboloidPipeline, paraboloidPipelineLayout});
     createCommandPool();
     createColorResources();
     createDepthResources();
     createFramebuffers();
     // createTextureSampler();
-    m_meshes.emplace("pyramid", Mesh("pyramid", m_device));
-    m_meshes["pyramid"].fromVertices(pyramidVertices.data(), pyramidVertices.size());
-    m_meshes["pyramid"].upload(m_allocator, m_graphicsQueue, m_commandPool);
-    m_meshes.emplace("cube", Mesh("cube", m_device));
-    m_meshes["cube"].fromVertices(cubeVertices.data(), cubeVertices.size());
-    m_meshes["cube"].upload(m_allocator, m_graphicsQueue, m_commandPool);
-    m_meshes.emplace("xAxis", Mesh("xAxis", m_device));
-    m_meshes["xAxis"].fromVertices(xAxisVertices.data(), xAxisVertices.size());
-    m_meshes["xAxis"].upload(m_allocator, m_graphicsQueue, m_commandPool);
-    m_meshes.emplace("yAxis", Mesh("yAxis", m_device));
-    m_meshes["yAxis"].fromVertices(yAxisVertices.data(), yAxisVertices.size());
-    m_meshes["yAxis"].upload(m_allocator, m_graphicsQueue, m_commandPool);
-    m_meshes.emplace("zAxis", Mesh("zAxis", m_device));
-    m_meshes["zAxis"].fromVertices(zAxisVertices.data(), zAxisVertices.size());
-    m_meshes["zAxis"].upload(m_allocator, m_graphicsQueue, m_commandPool);
-    m_meshes.emplace("redline", Mesh("redline", m_device));
-    m_meshes["redline"].fromVertices(redLineVertices.data(), redLineVertices.size());
-    m_meshes["redline"].upload(m_allocator, m_graphicsQueue, m_commandPool);
-    m_meshes.emplace("yellowline", Mesh("yellowline", m_device));
-    m_meshes["yellowline"].fromVertices(yellowLineVertices.data(), yellowLineVertices.size());
-    m_meshes["yellowline"].upload(m_allocator, m_graphicsQueue, m_commandPool);
-    m_meshes.emplace("greenline", Mesh("greenline", m_device));
-    m_meshes["greenline"].fromVertices(greenLineVertices.data(), greenLineVertices.size());
-    m_meshes["greenline"].upload(m_allocator, m_graphicsQueue, m_commandPool);
+    std::map<std::string, const std::vector<Vertex> *> meshesMap = {
+        {"pyramid", &pyramidVertices},     {"cube", &cubeVertices},
+        {"xAxis", &xAxisVertices},         {"yAxis", &yAxisVertices},
+        {"zAxis", &zAxisVertices},         {"redline", &redLineVertices},
+        {"greenline", &greenLineVertices}, {"yellowline", &yellowLineVertices}};
+
+    for (auto &[name, vertices] : meshesMap)
+    {
+        m_meshHandles[name] = m_meshes.insert(Mesh{m_device});
+        auto mesh = m_meshes.get(m_meshHandles[name]);
+        auto meshVertices = meshesMap[name];
+        mesh->fromVertices(meshVertices->data(), meshVertices->size());
+        mesh->upload(m_allocator, m_graphicsQueue, m_commandPool);
+    }
     createUniformBuffers();
     createDescriptorPool();
     createDescriptorSets();
@@ -802,53 +793,81 @@ void VulkanRenderer::createCommandBuffers()
 
 void VulkanRenderer::drawObjects(VkCommandBuffer &commandBuffer)
 {
-    Mesh *lastMesh = nullptr;
-    Material *lastMaterial = nullptr;
-    for (auto &[name, object] : m_renderableObjects)
+    uint32_t lastMeshIdx = UINT32_MAX;
+    uint32_t lastMaterialIdx = UINT32_MAX;
+
+    std::vector<uint32_t> drawOrder(m_renderObjects.dense().size());
+    std::iota(drawOrder.begin(), drawOrder.end(), 0);
+    auto &renderObjectDense = m_renderObjects.dense();
+
+    std::sort(drawOrder.begin(), drawOrder.end(), [&](uint32_t ia, uint32_t ib) {
+        const auto hMatA = renderObjectDense[ia].value.hMaterial;
+        const auto hMatB = renderObjectDense[ib].value.hMaterial;
+
+        if (hMatA.index != hMatB.index)
+            return hMatA.index < hMatB.index;
+
+        const auto hMeshA = renderObjectDense[ia].value.hMesh;
+        const auto hMeshB = renderObjectDense[ib].value.hMesh;
+
+        return hMeshA.index < hMeshB.index;
+    });
+
+    for (uint32_t &idx : drawOrder)
     {
-        if (object.material != lastMaterial)
+        auto &ro = renderObjectDense[idx].value;
+        Material *material = m_materials.get(ro.hMaterial);
+        Mesh *mesh = m_meshes.get(ro.hMesh);
+
+        if (ro.hMaterial.index != lastMaterialIdx)
         {
-            vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipeline);
-            vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelineLayout, 0,
-                                    1, &m_descriptorSets[m_currentFrame], 0, nullptr);
-            lastMaterial = object.material;
+            vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material->pipeline);
+            vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material->pipelineLayout, 0, 1,
+                                    &m_descriptorSets[m_currentFrame], 0, nullptr);
+            lastMaterialIdx = ro.hMaterial.index;
         }
 
-        vkCmdPushConstants(commandBuffer, object.material->pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0,
-                           sizeof(glm::mat4), &(object.transformMatrix));
-        if (object.textureIdx)
+        vkCmdPushConstants(commandBuffer, material->pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4),
+                           &(ro.transformMatrix));
+        if (ro.textureIdx != -1)
         {
-            vkCmdPushConstants(commandBuffer, object.material->pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT,
-                               sizeof(glm::mat4), sizeof(int), &(object.textureIdx));
+            vkCmdPushConstants(commandBuffer, material->pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(glm::mat4),
+                               sizeof(int), &(ro.textureIdx));
         }
-        if (object.mesh != lastMesh)
+        if (ro.hMesh.index != lastMeshIdx)
         {
             VkDeviceSize offset = 0;
-            vkCmdBindVertexBuffers(commandBuffer, 0, 1, &object.mesh->m_vertexBuffer, &offset);
-            vkCmdBindIndexBuffer(commandBuffer, object.mesh->m_indexBuffer, 0, VK_INDEX_TYPE_UINT32);
-            lastMesh = object.mesh;
+            vkCmdBindVertexBuffers(commandBuffer, 0, 1, &mesh->m_vertexBuffer, &offset);
+            vkCmdBindIndexBuffer(commandBuffer, mesh->m_indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+            lastMeshIdx = ro.hMesh.index;
         }
-        vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(object.mesh->m_indices.size()), 1, 0, 0, 0);
+        vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(mesh->m_indices.size()), 1, 0, 0, 0);
     }
 
     // Outline render
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_materials["outline"].pipeline);
-    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_materials["outline"].pipelineLayout, 0, 1,
+    Material *outlineMat = m_materials.get(m_materialHandles["outline"]);
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, outlineMat->pipeline);
+    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, outlineMat->pipelineLayout, 0, 1,
                             &m_descriptorSets[m_currentFrame], 0, nullptr);
-    for (auto &[name, object] : m_renderableObjects)
+
+    for (uint32_t &idx : drawOrder)
     {
-        if (object.mesh->name == "cube" || object.mesh->name == "pyramid")
+        auto &ro = renderObjectDense[idx].value;
+        Material *material = m_materials.get(ro.hMaterial);
+        Mesh *mesh = m_meshes.get(ro.hMesh);
+
+        if (ro.hMesh.index == m_meshHandles["cube"].index || ro.hMesh.index == m_meshHandles["pyramid"].index)
         {
-            vkCmdPushConstants(commandBuffer, m_materials["outline"].pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0,
-                               sizeof(glm::mat4), &(object.transformMatrix));
-            if (object.mesh != lastMesh)
+            vkCmdPushConstants(commandBuffer, outlineMat->pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0,
+                               sizeof(glm::mat4), &(ro.transformMatrix));
+            if (ro.hMesh.index != lastMeshIdx)
             {
                 VkDeviceSize offset = 0;
-                vkCmdBindVertexBuffers(commandBuffer, 0, 1, &object.mesh->m_vertexBuffer, &offset);
-                vkCmdBindIndexBuffer(commandBuffer, object.mesh->m_indexBuffer, 0, VK_INDEX_TYPE_UINT32);
-                lastMesh = object.mesh;
+                vkCmdBindVertexBuffers(commandBuffer, 0, 1, &mesh->m_vertexBuffer, &offset);
+                vkCmdBindIndexBuffer(commandBuffer, mesh->m_indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+                lastMeshIdx = ro.hMesh.index;
             }
-            vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(object.mesh->m_indices.size()), 1, 0, 0, 0);
+            vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(mesh->m_indices.size()), 1, 0, 0, 0);
         }
     }
 }
@@ -1317,15 +1336,15 @@ void VulkanRenderer::cleanup()
 
     cleanupSwapChain(true);
 
-    for (auto &[name, material] : m_materials)
+    for (auto &material : m_materials.dense())
     {
-        if (material.pipeline)
+        if (material.value.pipeline)
         {
-            vkDestroyPipeline(m_device, material.pipeline, nullptr);
+            vkDestroyPipeline(m_device, material.value.pipeline, nullptr);
         }
-        if (material.pipelineLayout)
+        if (material.value.pipelineLayout)
         {
-            vkDestroyPipelineLayout(m_device, material.pipelineLayout, nullptr);
+            vkDestroyPipelineLayout(m_device, material.value.pipelineLayout, nullptr);
         }
     }
 
@@ -1350,9 +1369,9 @@ void VulkanRenderer::cleanup()
 
     vkDestroyDescriptorSetLayout(m_device, m_descriptorSetLayout, nullptr);
 
-    for (auto &[name, mesh] : m_meshes)
+    for (auto &mesh : m_meshes.dense())
     {
-        mesh.cleanup(m_allocator);
+        mesh.value.cleanup(m_allocator);
     }
 
     cleanupSyncObjects();
@@ -1598,76 +1617,41 @@ void VulkanRenderer::updateUniformBuffer(uint32_t currentImage)
     memcpy(m_uniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
 }
 
-Material *VulkanRenderer::getMaterial(const std::string &name)
+SparseSet<Material>::Handle VulkanRenderer::getMaterial(const std::string &name) { return m_materialHandles.at(name); }
+
+SparseSet<Mesh>::Handle VulkanRenderer::getMesh(const std::string &name) { return m_meshHandles.at(name); }
+
+void VulkanRenderer::recordImguiData(ImDrawData *data) { m_imguiDrawData[m_currentFrame] = data; }
+
+SparseSet<RenderObject>::Handle VulkanRenderer::addRenderObject(RenderObject obj)
 {
-    auto it = m_materials.find(name);
-    if (it == m_materials.end())
-    {
-        return nullptr;
-    }
-    else
-    {
-        return &(*it).second;
-    }
+    return m_renderObjects.insert(obj);
 }
 
-Mesh *VulkanRenderer::getMesh(const std::string &name)
-{
-    auto it = m_meshes.find(name);
-    if (it == m_meshes.end())
-    {
-        return nullptr;
-    }
-    else
-    {
-        return &(*it).second;
-    }
-}
-
-void VulkanRenderer::recordImguiData(ImDrawData *data)
-{
-    m_imguiDrawData[m_currentFrame] = data;
-    return;
-}
-
-std::multimap<std::string, Renderable, RenderableComp>::iterator VulkanRenderer::addRenderable(Renderable obj)
-{
-    obj.id = m_currentRenderableId;
-    m_currentRenderableId++;
-    return m_renderableObjects.insert(std::pair{(obj.mesh->name + obj.material->name), std::move(obj)});
-}
-
-void VulkanRenderer::addRenderables(Model *model)
-{
-    for (RenderableInfo &info : model->_renderableInfos)
-    {
-        model->_renderables.emplace(info.renderableName,
-                                    addRenderable(Renderable{getMesh(info.meshName), getMaterial(info.materialName),
-                                                             info.transformMatrix, nullptr, 0ull}));
-    }
-}
-
-void VulkanRenderer::removeRenderable(std::multimap<std::string, Renderable, RenderableComp>::iterator &it)
-{
-    m_renderableObjects.erase(it);
-}
+void VulkanRenderer::removeRenderObject(SparseSet<RenderObject>::Handle handle) { m_renderObjects.remove(handle); }
 
 std::string VulkanRenderer::createParaboloid(std::string meshName, int nx, int nz,
                                              const std::function<double(double, double)> &formula)
 {
-    if (getMesh(meshName) != nullptr)
+    if (m_meshHandles.find(meshName) != m_meshHandles.end())
     {
         meshName.append("1");
     }
-    while (getMesh(meshName) != nullptr)
+    while (m_meshHandles.find(meshName) != m_meshHandles.end())
     {
         meshName.back() += 1;
     }
     auto paraboloidVertices =
         generateParaboloidVertices(nx, nz, -1.0, 1.0, -1.0, 1.0, glm::vec3{1.0, 0.0, 0.0}, formula);
-    m_meshes.emplace(meshName, Mesh(meshName, m_device));
-    m_meshes[meshName].fromVertices(paraboloidVertices.data(), paraboloidVertices.size());
-    m_meshes[meshName].upload(m_allocator, m_graphicsQueue, m_commandPool);
+    m_meshHandles[meshName] = m_meshes.insert(Mesh{m_device});
+    auto mesh = m_meshes.get(m_meshHandles[meshName]);
+    mesh->fromVertices(paraboloidVertices.data(), paraboloidVertices.size());
+    mesh->upload(m_allocator, m_graphicsQueue, m_commandPool);
 
     return meshName;
+}
+
+RenderObject *VulkanRenderer::getRenderObject(SparseSet<RenderObject>::Handle handle)
+{
+    return m_renderObjects.get(handle);
 }

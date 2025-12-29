@@ -6,7 +6,7 @@
 int main()
 {
     VulkanRenderer renderer{};
-    Node::setRenderer(&renderer);
+    BaseObject::setRenderer(&renderer);
     Simulation app(&renderer);
 
     try

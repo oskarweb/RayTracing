@@ -1,6 +1,7 @@
 #pragma once
 
 #include "mesh.hpp"
+#include "sparse_set.hpp"
 
 #include <functional>
 
@@ -9,25 +10,27 @@ using VmaAllocation = VmaAllocation_T *;
 
 struct Material
 {
-    std::string name = "default";
     VkPipeline pipeline = VK_NULL_HANDLE;
     VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
 
     Material() : pipeline(VK_NULL_HANDLE), pipelineLayout(VK_NULL_HANDLE) {}
-    Material(const std::string &name, VkPipeline pipeline, VkPipelineLayout pipelineLayout)
-        : name(name), pipeline(pipeline), pipelineLayout(pipelineLayout)
+    Material(VkPipeline pipeline, VkPipelineLayout pipelineLayout) : pipeline(pipeline), pipelineLayout(pipelineLayout)
     {
     }
 };
 
-struct Renderable
+struct RenderObject
 {
-    Mesh *mesh = nullptr;
-    Material *material = nullptr;
+    RenderObject() = default;
+    RenderObject(SparseSet<Mesh>::Handle mesh, SparseSet<Material>::Handle material, glm::mat4 tMat)
+        : hMesh(mesh), hMaterial(material), transformMatrix(tMat)
+    {
+    }
+    SparseSet<Mesh>::Handle hMesh{};
+    SparseSet<Material>::Handle hMaterial{};
     glm::mat4 transformMatrix{};
 
-    std::unique_ptr<int> textureIdx = nullptr;
-    uint64_t id = 0;
+    int textureIdx = -1;
 };
 
 struct RenderableComp
@@ -68,22 +71,7 @@ struct CameraBuffer
     glm::mat4 proj{};
 };
 
-struct RenderableInfo
-{
-    RenderableInfo(const std::string &renderableName, const std::string &meshName, const std::string &materialName,
-                   glm::mat4 transformMatrix)
-        : renderableName(renderableName), meshName(meshName), materialName(materialName),
-          transformMatrix(transformMatrix)
-    {
-    }
-
-    std::string renderableName{};
-    std::string meshName{};
-    std::string materialName{};
-    glm::mat4 transformMatrix{};
-};
-
-inline constexpr const std::array<Vertex, 36> cubeVertices = {
+inline const std::vector<Vertex> cubeVertices = {
     // Front
     Vertex{{-0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
     Vertex{{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
@@ -134,7 +122,7 @@ inline constexpr const std::array<Vertex, 36> cubeVertices = {
     Vertex{{0.5f, 0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
 };
 
-inline constexpr const std::array<Vertex, 18> pyramidVertices = {
+inline const std::vector<Vertex> pyramidVertices = {
     // Front
     Vertex{{-0.5f, 0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
     Vertex{{0.5f, 0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
@@ -161,32 +149,32 @@ inline constexpr const std::array<Vertex, 18> pyramidVertices = {
     Vertex{{0.5f, 0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
 };
 
-inline constexpr const std::array<Vertex, 2> redLineVertices = {
+inline const std::vector<Vertex> redLineVertices = {
     Vertex{{0.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
     Vertex{{1.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
 };
 
-inline constexpr const std::array<Vertex, 2> yellowLineVertices = {
+inline const std::vector<Vertex> yellowLineVertices = {
     Vertex{{0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
     Vertex{{1.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
 };
 
-inline constexpr const std::array<Vertex, 2> greenLineVertices = {
+inline const std::vector<Vertex> greenLineVertices = {
     Vertex{{0.0f, 0.0f, 0.0f}, {0.0f, 0.3f, 0.0f}, {0.0f, 0.0f}},
     Vertex{{1.0f, 0.0f, 0.0f}, {0.0f, 0.3f, 0.0f}, {0.0f, 0.0f}},
 };
 
-inline constexpr const std::array<Vertex, 2> xAxisVertices = {
+inline const std::vector<Vertex> xAxisVertices = {
     Vertex{{0.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
     Vertex{{Constants::AXES_LENGTH, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
 };
 
-inline constexpr const std::array<Vertex, 2> yAxisVertices = {
+inline const std::vector<Vertex> yAxisVertices = {
     Vertex{{0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
     Vertex{{0.0f, Constants::AXES_LENGTH, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
 };
 
-inline constexpr const std::array<Vertex, 2> zAxisVertices = {
+inline const std::vector<Vertex> zAxisVertices = {
     Vertex{{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
     Vertex{{0.0f, 0.0f, Constants::AXES_LENGTH}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
 };

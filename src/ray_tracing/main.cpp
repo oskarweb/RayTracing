@@ -6,7 +6,7 @@
 int main()
 {
     VulkanRenderer renderer{};
-    Node::setRenderer(&renderer);
+    BaseObject::setRenderer(&renderer);
     RayTracing app(&renderer);
 
     try

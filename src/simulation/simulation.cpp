@@ -61,7 +61,6 @@ void Simulation::run()
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
     AxesModel axes(glm::vec3(0.0f));
-    m_rendererHandle->addRenderables(&axes);
 
     while (!glfwWindowShouldClose(m_window))
     {
