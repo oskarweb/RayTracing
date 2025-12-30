@@ -79,7 +79,7 @@ public:
 
     std::mutex &mutexData() { return *m_statesMutex; }
 
-    std::map<uint32_t, State> &statesData() { return m_states; }
+    std::unordered_map<uint32_t, State> &statesData() { return m_states; }
 
     uint32_t getBufferedStepCount() const { return static_cast<uint32_t>(m_states.size()); }
     void setMaxStep(uint32_t maxStep) { *m_maxStep = maxStep; }
@@ -143,7 +143,7 @@ private:
     Trail m_trail;
 
     std::unique_ptr<State> m_initialState;
-    std::map<uint32_t, State> m_states;
+    std::unordered_map<uint32_t, State> m_states;
 
     std::unique_ptr<std::mutex> m_statesMutex;
 

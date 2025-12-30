@@ -10,7 +10,7 @@
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
 
-#include <map>
+#include <unordered_map>
 
 inline void printVec3(glm::vec3 &vec, const std::string &name = "")
 {
@@ -27,7 +27,7 @@ struct Model : public BaseObject
 
     Model(glm::vec3 pos)
     {
-        _pos = _pos;
+        _pos = pos;
         _faceDirection = glm::normalize(glm::vec3(0.0f, 0.0f, 1.0f));
         _offset = glm::vec3(0.0f);
     }
@@ -53,7 +53,7 @@ struct Model : public BaseObject
     glm::vec3 _pos;
     glm::vec3 _faceDirection;
     glm::vec3 _offset;
-    std::map<std::string, SparseSet<RenderObject>::Handle> _renderObjectHandles{};
+    std::unordered_map<std::string, SparseSet<RenderObject>::Handle> _renderObjectHandles{};
 };
 
 struct VectorArrowModel : Model
@@ -173,9 +173,9 @@ struct AxesModel : Model
     {
         auto xAxis = BaseObject::rendererHandle->getRenderObject(_renderObjectHandles["xAxis"]);
         xAxis->transformMatrix = glm::translate(glm::mat4(1.0f), pos);
-        auto yAxis = BaseObject::rendererHandle->getRenderObject(_renderObjectHandles["xAxis"]);
+        auto yAxis = BaseObject::rendererHandle->getRenderObject(_renderObjectHandles["yAxis"]);
         yAxis->transformMatrix = glm::translate(glm::mat4(1.0f), pos);
-        auto zAxis = BaseObject::rendererHandle->getRenderObject(_renderObjectHandles["xAxis"]);
+        auto zAxis = BaseObject::rendererHandle->getRenderObject(_renderObjectHandles["zAxis"]);
         zAxis->transformMatrix = glm::translate(glm::mat4(1.0f), pos);
         xAxis->transformMatrix = glm::translate(glm::mat4(1.0f), pos);
         yAxis->transformMatrix = glm::translate(glm::mat4(1.0f), pos);

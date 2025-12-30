@@ -2,7 +2,7 @@
 
 #include <GLFW/glfw3.h>
 
-#include <map>
+#include <unordered_map>
 #include <utility>
 
 class Input
@@ -20,9 +20,9 @@ public:
         double y = 0.0F;
     };
 
-    inline static std::map<int, Key> keyStates = {{GLFW_KEY_W, Key{false, false}}, {GLFW_KEY_S, Key{false, false}},
-                                                  {GLFW_KEY_A, Key{false, false}}, {GLFW_KEY_D, Key{false, false}},
-                                                  {GLFW_KEY_C, Key{false, false}}, {GLFW_KEY_F, Key{false, false}}};
+    inline static std::unordered_map<int, Key> keyStates = {
+        {GLFW_KEY_W, Key{false, false}}, {GLFW_KEY_S, Key{false, false}}, {GLFW_KEY_A, Key{false, false}},
+        {GLFW_KEY_D, Key{false, false}}, {GLFW_KEY_C, Key{false, false}}, {GLFW_KEY_F, Key{false, false}}};
 
     inline static void setWindow(GLFWwindow *window)
     {

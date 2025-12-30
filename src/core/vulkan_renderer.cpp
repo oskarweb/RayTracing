@@ -177,7 +177,7 @@ void VulkanRenderer::init()
     createDepthResources();
     createFramebuffers();
     // createTextureSampler();
-    std::map<std::string, const std::vector<Vertex> *> meshesMap = {
+    std::unordered_map<std::string, const std::vector<Vertex> *> meshesMap = {
         {"pyramid", &pyramidVertices},     {"cube", &cubeVertices},
         {"xAxis", &xAxisVertices},         {"yAxis", &yAxisVertices},
         {"zAxis", &zAxisVertices},         {"redline", &redLineVertices},

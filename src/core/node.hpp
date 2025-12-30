@@ -17,5 +17,5 @@ public:
     virtual void cleanup() = 0;
 
 protected:
-    std::map<std::string, std::unique_ptr<Model>> m_models{};
+    std::unordered_map<std::string, std::unique_ptr<Model>> m_models{};
 };

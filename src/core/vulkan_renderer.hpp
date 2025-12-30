@@ -159,8 +159,8 @@ private:
     SparseSet<Material> m_materials;
     std::vector<Texture> m_textures{};
 
-    std::map<std::string, SparseSet<Mesh>::Handle> m_meshHandles{};
-    std::map<std::string, SparseSet<Material>::Handle> m_materialHandles{};
+    std::unordered_map<std::string, SparseSet<Mesh>::Handle> m_meshHandles{};
+    std::unordered_map<std::string, SparseSet<Material>::Handle> m_materialHandles{};
 
     std::vector<Mesh> testMesh{};
 
