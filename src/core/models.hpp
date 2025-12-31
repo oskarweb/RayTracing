@@ -67,7 +67,7 @@ struct VectorArrowModel : Model
 
         glm::mat4 translation = glm::translate(glm::mat4(1.0f), _pos + _offset);
 
-        glm::quat rotation = glm::rotation(Constants::WORLD_UP, faceDirection);
+        glm::quat rotation = glm::rotation(Constants::WORLD_UP, _faceDirection);
         auto head = BaseObject::rendererHandle->getRenderObject(_renderObjectHandles["head"]);
         head->transformMatrix = translation * glm::toMat4(rotation);
     }
@@ -102,8 +102,15 @@ struct RedLineModel : Model
     void update(glm::vec3 pos = glm::vec3(0.0f), glm::vec3 faceDirection = glm::vec3(0.0f),
                 glm::vec3 offset = glm::vec3(0.0f)) override
     {
-        auto trail = BaseObject::rendererHandle->getRenderObject(_renderObjectHandles["trail"]);
-        trail->transformMatrix = glm::translate(glm::mat4(1.0f), pos);
+        _pos = pos;
+        _faceDirection = glm::normalize(faceDirection);
+        _offset = offset;
+
+        glm::mat4 translation = glm::translate(glm::mat4(1.0f), _pos);
+        glm::mat4 scale = glm::scale(glm::mat4(1.0f), _offset);
+        glm::quat rotation = glm::rotation(Constants::WORLD_UP, _faceDirection);
+        auto head = BaseObject::rendererHandle->getRenderObject(_renderObjectHandles["trail"]);
+        head->transformMatrix = translation * glm::toMat4(rotation) * scale;
     }
 
     RedLineModel(glm::vec3 from, glm::vec3 to) : Model(from)
@@ -172,11 +179,8 @@ struct AxesModel : Model
                 glm::vec3 offset = glm::vec3(0.0f)) override
     {
         auto xAxis = BaseObject::rendererHandle->getRenderObject(_renderObjectHandles["xAxis"]);
-        xAxis->transformMatrix = glm::translate(glm::mat4(1.0f), pos);
         auto yAxis = BaseObject::rendererHandle->getRenderObject(_renderObjectHandles["yAxis"]);
-        yAxis->transformMatrix = glm::translate(glm::mat4(1.0f), pos);
         auto zAxis = BaseObject::rendererHandle->getRenderObject(_renderObjectHandles["zAxis"]);
-        zAxis->transformMatrix = glm::translate(glm::mat4(1.0f), pos);
         xAxis->transformMatrix = glm::translate(glm::mat4(1.0f), pos);
         yAxis->transformMatrix = glm::translate(glm::mat4(1.0f), pos);
         zAxis->transformMatrix = glm::translate(glm::mat4(1.0f), pos);

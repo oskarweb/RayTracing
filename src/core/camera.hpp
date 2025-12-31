@@ -38,11 +38,11 @@ public:
 
     void processKeyboardInput()
     {
-        if (Input::isPressed(GLFW_KEY_W) && !Input::isPressed(GLFW_KEY_S))
+        if (Input::isPressedKeyboard(GLFW_KEY_W) && !Input::isPressedKeyboard(GLFW_KEY_S))
         {
             m_velocity.z = m_maxVelocity;
         }
-        else if (Input::isPressed(GLFW_KEY_S) && !Input::isPressed(GLFW_KEY_W))
+        else if (Input::isPressedKeyboard(GLFW_KEY_S) && !Input::isPressedKeyboard(GLFW_KEY_W))
         {
             m_velocity.z = -m_maxVelocity;
         }
@@ -51,11 +51,11 @@ public:
             m_velocity.z = 0.0f;
         }
 
-        if (Input::isPressed(GLFW_KEY_A) && !Input::isPressed(GLFW_KEY_D))
+        if (Input::isPressedKeyboard(GLFW_KEY_A) && !Input::isPressedKeyboard(GLFW_KEY_D))
         {
             m_velocity.x = -m_maxVelocity;
         }
-        else if (Input::isPressed(GLFW_KEY_D) && !Input::isPressed(GLFW_KEY_A))
+        else if (Input::isPressedKeyboard(GLFW_KEY_D) && !Input::isPressedKeyboard(GLFW_KEY_A))
         {
             m_velocity.x = m_maxVelocity;
         }
@@ -64,11 +64,11 @@ public:
             m_velocity.x = 0.0f;
         }
 
-        if (Input::isJustPressed(GLFW_KEY_C))
+        if (Input::isJustPressedKeyboard(GLFW_KEY_C))
         {
             m_locked = !m_locked;
         }
-        if (Input::isJustPressed(GLFW_KEY_F))
+        if (Input::isJustPressedKeyboard(GLFW_KEY_F))
         {
             m_lookingAtOrigin = !m_lookingAtOrigin;
         }

@@ -1607,14 +1607,31 @@ void VulkanRenderer::newFrame()
 
 void VulkanRenderer::updateUniformBuffer(uint32_t currentImage)
 {
-    CameraBuffer ubo{};
-
-    ubo.view = m_cameraPtr->getViewMatrix();
-    ubo.proj =
+    m_cameraUBO.view = m_cameraPtr->getViewMatrix();
+    m_cameraUBO.proj =
         glm::perspective(glm::radians(60.0f), m_swapChainExtent.width / (float)m_swapChainExtent.height, 0.1f, 1000.0f);
     // ubo.proj[1][1] *= -1;
 
-    memcpy(m_uniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
+    memcpy(m_uniformBuffersMapped[currentImage], &m_cameraUBO, sizeof(m_cameraUBO));
+}
+
+Ray VulkanRenderer::castRayIntoWorld(float screenX, float screenY)
+{
+    float x = (2.0f * screenX / m_framebufferWidth) - 1.0f;
+    float y = (2.0f * screenY / m_frameBufferHeight) - 1.0f;
+
+    glm::mat4 invVP = glm::inverse(m_cameraUBO.proj * m_cameraUBO.view);
+
+    glm::vec4 nearP = invVP * glm::vec4(x, y, 0.0f, 1.0f);
+    glm::vec4 farP = invVP * glm::vec4(x, y, 1.0f, 1.0f);
+
+    nearP /= nearP.w;
+    farP /= farP.w;
+
+    glm::vec3 origin = glm::vec3(nearP);
+    glm::vec3 dir = glm::normalize(glm::vec3(farP - nearP));
+
+    return {origin, dir};
 }
 
 SparseSet<Material>::Handle VulkanRenderer::getMaterial(const std::string &name) { return m_materialHandles.at(name); }

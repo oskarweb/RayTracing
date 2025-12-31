@@ -51,14 +51,16 @@ void RayTracing::run()
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
     AxesModel axes(glm::vec3(0.0f));
-    const std::string &paraboloidMeshName = m_rendererHandle->createParaboloid(
-        "paraboloid", 20, 20, [](double x, double y) -> double { return y * y / 2 - x * x / 3; });
-    const std::string &paraboloidMeshName2 = m_rendererHandle->createParaboloid(
-        "paraboloid", 20, 20, [](double x, double y) -> double { return y * y / 0.1 - x * x / 0.01; });
-    ParaboloidModel plane(glm::vec3(0.0f), glm::vec3(10.0f, 3.0f, 10.0f), paraboloidMeshName);
-    ParaboloidModel plane2(glm::vec3(0.0f, 10.0f, 0.0f), glm::vec3(10.0f, 3.0f, 10.0f), paraboloidMeshName2);
+    // const std::string &paraboloidMeshName = m_rendererHandle->createParaboloid(
+    //     "paraboloid", 20, 20, [](double x, double y) -> double { return y * y / 2 - x * x / 3; });
+    // const std::string &paraboloidMeshName2 = m_rendererHandle->createParaboloid(
+    //     "paraboloid", 20, 20, [](double x, double y) -> double { return y * y / 0.1 - x * x / 0.01; });
+    // ParaboloidModel plane(glm::vec3(0.0f), glm::vec3(10.0f, 3.0f, 10.0f), paraboloidMeshName);
+    // ParaboloidModel plane2(glm::vec3(0.0f, 10.0f, 0.0f), glm::vec3(10.0f, 3.0f, 10.0f), paraboloidMeshName2);
 
     // Body body{Types::Vec3d(0.0, -5.0, 0.0), Types::Vec3d(1.0, 0.0, 1.0)};
+
+    std::vector<std::unique_ptr<Model>> rayVisualizations;
 
     while (!glfwWindowShouldClose(m_window))
     {
@@ -70,6 +72,17 @@ void RayTracing::run()
         ImGui_ImplVulkan_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
+
+        if (Input::isPressedMouse(GLFW_MOUSE_BUTTON_LEFT))
+        {
+            auto ray = m_rendererHandle->castRayIntoWorld(static_cast<float>(Input::mousePos.x),
+                                                          static_cast<float>(Input::mousePos.y));
+            rayVisualizations.resize(rayVisualizations.size() + 1);
+            rayVisualizations[rayVisualizations.size() - 1] =
+                std::make_unique<RedLineModel>(ray.origin, ray.origin + glm::vec3(10.0f));
+            rayVisualizations[rayVisualizations.size() - 1]->update(
+                rayVisualizations[rayVisualizations.size() - 1]->_pos, ray.dir, glm::vec3(1.0f, 10.0f, 1.0f));
+        }
 
         ImPlot::ShowDemoWindow();
         ImGui::ShowDemoWindow();

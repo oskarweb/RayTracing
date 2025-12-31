@@ -93,6 +93,7 @@ public:
     std::string createParaboloid(std::string meshName, int nx, int nz,
                                  const std::function<double(double, double)> &formula);
     RenderObject *getRenderObject(SparseSet<RenderObject>::Handle handle) override;
+    Ray castRayIntoWorld(float x, float y);
 
 private:
     void initImplVulkanImGui();
@@ -204,6 +205,8 @@ private:
     std::vector<void *> m_uniformBuffersMapped{};
     VkDescriptorPool m_descriptorPool = VK_NULL_HANDLE;
     std::vector<VkDescriptorSet> m_descriptorSets{};
+
+    CameraBuffer m_cameraUBO{};
 
     uint32_t m_mipLevels = 0;
     VkSampler m_textureSampler = VK_NULL_HANDLE;

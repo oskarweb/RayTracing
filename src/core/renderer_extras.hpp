@@ -71,6 +71,12 @@ struct CameraBuffer
     glm::mat4 proj{};
 };
 
+struct Ray
+{
+    glm::vec3 origin{};
+    glm::vec3 dir{};
+};
+
 inline const std::vector<Vertex> cubeVertices = {
     // Front
     Vertex{{-0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
@@ -151,7 +157,7 @@ inline const std::vector<Vertex> pyramidVertices = {
 
 inline const std::vector<Vertex> redLineVertices = {
     Vertex{{0.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
-    Vertex{{1.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+    Vertex{{0.0f, -1.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
 };
 
 inline const std::vector<Vertex> yellowLineVertices = {
