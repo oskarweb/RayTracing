@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <utility>
 #include <vector>
 
 template <typename T> class SparseSet
@@ -12,7 +13,7 @@ public:
         uint32_t generation = 0u;
     };
 
-    Handle insert(const T &value)
+    Handle insert(T value)
     {
         uint32_t sidx;
 
@@ -28,7 +29,7 @@ public:
         }
 
         uint32_t didx = m_dense.size();
-        m_dense.emplace_back(value, sidx);
+        m_dense.emplace_back(std::move(value), sidx);
 
         auto &s = m_sparse[sidx];
         s.denseIndex = didx;
@@ -66,7 +67,7 @@ public:
 
     struct DenseEntry
     {
-        DenseEntry(const T &v, uint32_t si) : value(v), sparseIndex(si) {}
+        DenseEntry(T v, uint32_t si) : value(std::move(v)), sparseIndex(si) {}
 
         T value;
         uint32_t sparseIndex = 0;

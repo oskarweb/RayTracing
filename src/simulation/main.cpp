@@ -1,7 +1,7 @@
 #include "simulation.hpp"
 
-#include "node.hpp"
-#include "vulkan_renderer.hpp"
+#include "core/scene/node.hpp"
+#include "raster/raster_renderer.hpp"
 
 int main()
 {

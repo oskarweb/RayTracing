@@ -12,7 +12,7 @@ add_executable(${SIMULATION_SUBPROJECT_NAME}
 
 target_link_libraries(${SIMULATION_SUBPROJECT_NAME}
     PRIVATE
-        ${CORE_LIB_NAME}
+        raster
 )
 
 set_target_properties(${SIMULATION_SUBPROJECT_NAME} PROPERTIES
@@ -38,7 +38,7 @@ add_custom_command(
     TARGET ${SIMULATION_SUBPROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/src/fonts" "$<TARGET_FILE_DIR:${SIMULATION_SUBPROJECT_NAME}>/fonts"
     COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/src/models" "$<TARGET_FILE_DIR:${SIMULATION_SUBPROJECT_NAME}>/models"
-    COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/src/shaders" "$<TARGET_FILE_DIR:${SIMULATION_SUBPROJECT_NAME}>/shaders"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/shaders/raster" "$<TARGET_FILE_DIR:${SIMULATION_SUBPROJECT_NAME}>/shaders"
     COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/src/textures" "$<TARGET_FILE_DIR:${SIMULATION_SUBPROJECT_NAME}>/textures"
 )
 

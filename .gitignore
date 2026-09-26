@@ -398,3 +398,5 @@ FodyWeavers.xsd
 build/
 
 .pre-commit-config.yaml
+
+embargo-docs/*

@@ -1,41 +1,28 @@
-﻿#pragma once
+#pragma once
 
 #include "particle.hpp"
 
-#include "camera.hpp"
-#include "extras.hpp"
-#include "input.hpp"
-#include "models.hpp"
-#include "vulkan_renderer.hpp"
+#include "core/camera/camera.hpp"
+#include "core/camera/input.hpp"
+#include "core/extras.hpp"
+#include "core/scene/models.hpp"
+#include "raster/raster_renderer.hpp"
 
 #include "imgui.h"
 
-#include <condition_variable>
+#include <atomic>
+#include <cmath>
 #include <format>
 #include <functional>
-#include <mutex>
-#include <thread>
+#include <limits>
 
 class Simulation
 {
 public:
     Simulation(VulkanRenderer *rendererHandle)
         : m_rendererHandle(rendererHandle),
-          m_camera(Camera(glm::vec3(-10.0f, -10.0f, -10.0f), 0.0f, 0.0f, glm::vec3(0.0f, 0.0f, 1.0f))),
-          m_threads(NUM_THREADS)
+          m_camera(Camera(glm::vec3(-10.0f, -10.0f, -10.0f), 0.0f, 0.0f, glm::vec3(0.0f, 0.0f, 1.0f)))
     {
-    }
-
-    ~Simulation()
-    {
-        if (m_threadedCalculation)
-        {
-            for (auto &thread : m_threads)
-            {
-                if (thread.joinable())
-                    thread.join();
-            }
-        }
     }
 
     void run();
@@ -64,6 +51,7 @@ public:
     };
 
 private:
+    friend struct SimulationRegressionAccess;
     static inline void framebufferResizeCallback(GLFWwindow *window, int width, int height);
 
     void updateStatic();
@@ -71,21 +59,10 @@ private:
     void update20MsPecalc();
     void updateRealTime();
 
-    Types::Vec3d calcForce(uint32_t stateId, Particle &particle, Types::Vec3d distanceMod = 0.0);
-    Types::Vec3d calcForcePosOverride(uint32_t stateId, Particle &particle, Types::Vec3d distanceOverride = 0.0);
-
     void calculateSteps(uint32_t startingStep);
 
-    void rk4Step(uint32_t startingStep, Particle &particle);
-    void forwardEulerStep(uint32_t stepIdx, Particle &particle);
-    void leapfrogStep(uint32_t stepIdx, Particle &particle);
-
     bool updatePositions();
-    void updatePositionsThreaded();
     void calculateParticlePositions(bool all = false);
-    void launchParticleThreads();
-    void calculateParticlePostionsThreaded(std::stop_token stopToken, uint32_t minIdx, uint32_t maxIdx);
-    void calculatePositionsForSingleParticle(Particle *particle);
     void addParticle(Particle &&particle);
     void removeParticle(std::vector<Particle>::iterator &it);
     void startSimulation();
@@ -97,7 +74,13 @@ private:
         return 1'000'000'000u / static_cast<uint32_t>(sizeof(Particle::State)) /
                (static_cast<uint32_t>(m_particles.size()) + 1);
     }
-    uint32_t getStepsPer20ms() { return static_cast<uint32_t>(0.02 / m_timeStep); }
+    uint32_t getStepsPer20ms()
+    {
+        if (!std::isfinite(m_timeStep) || m_timeStep <= 0.0)
+            throw std::invalid_argument("Timestep must be positive and finite");
+        return static_cast<uint32_t>(
+            std::clamp(std::ceil(0.02 / m_timeStep), 1.0, double(std::numeric_limits<uint32_t>::max() - 1)));
+    }
 
     // GUI
     void displayMainCtrlWindow();
@@ -121,26 +104,18 @@ private:
 
     std::vector<Particle> m_particles;
 
+    bool m_hasStarted = false;
     bool m_skipUpdate = true;
     std::atomic<bool> m_paused = true;
     std::atomic<double> m_elapsedTime = 0.0;
-    double m_startTime = 0.0;
     double m_simulationTime = DEFAULT_SIMULATION_TIME;
     double m_timeStep = DEFAULT_TIME_STEP;
     double m_timeToCalculateAllParticlePos = 0.0;
     uint32_t m_mutualMaxStep = 0;
     uint32_t m_maxUsedStep = 0;
 
-    // MULTITHREADING
-    bool m_threadedCalculation = false;
-    std::vector<std::jthread> m_threads;
-    std::condition_variable m_mutualStepCv;
-
-    bool m_isHung = false;
-    std::vector<Particle>::iterator m_hungIt;
-
     // GUI
-    std::vector<Particle>::iterator m_plotSelectedParticle;
+    std::optional<uint64_t> m_plotSelectedParticle;
 
     inline static constexpr const ImVec2 START_BUTTON_SIZE = ImVec2(148, 40);
     inline static constexpr const ImVec2 PRESET1_BUTTON_SIZE = ImVec2(70, 30);
@@ -160,7 +135,6 @@ private:
     inline static constexpr const double DEFAULT_SIMULATION_TIME = 2.0;
     inline static constexpr const double DEFAULT_TIME_STEP = 0.0001;
     inline static constexpr const uint32_t STEPS_BUFFERED_AT_ONCE = 1000;
-    inline static constexpr const uint32_t NUM_THREADS = 2;
     inline static constexpr const float WINDOWS_BG_ALPHA = 0.50f;
     inline static constexpr const double SLIDER_MIN_AFFECTING_FORCE = -2.0;
     inline static constexpr const double SLIDER_MAX_AFFECTING_FORCE = 2.0;
@@ -207,7 +181,8 @@ private:
 void Simulation::framebufferResizeCallback(GLFWwindow *window, int width, int height)
 {
     Simulation *app = static_cast<Simulation *>(glfwGetWindowUserPointer(window));
-    app->m_rendererHandle->notifyFramebufferResized();
+    if (app && app->m_rendererHandle)
+        app->m_rendererHandle->notifyFramebufferResized();
 }
 
 std::string Simulation::particleHeaderText(const Particle &particle)

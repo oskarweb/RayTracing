@@ -1,10 +1,11 @@
 #pragma once
 
-#include "extras.hpp"
-#include "models.hpp"
-#include "node.hpp"
-#include "renderer_extras.hpp"
-#include "trail.hpp"
+#include "core/extras.hpp"
+#include "core/scene/models.hpp"
+#include "core/scene/node.hpp"
+#include "core/scene/renderer_extras.hpp"
+#include "core/scene/trail.hpp"
+#include "integration.hpp"
 
 #include <glm/glm.hpp>
 
@@ -46,35 +47,38 @@ public:
     inline void clearStates() { m_states.clear(); }
     bool updateFromPrecalcPos(uint32_t idx);
     void cleanup() override;
-    void resetTrail() { m_trail.cleanup(); }
+    void resetTrail()
+    {
+        m_trail.cleanup();
+        m_lastTrailStep.reset();
+    }
 
     inline Types::Vec3d getCoulombForce(Particle &other) const
     {
         // F = k * |q1 * q2| / r^2
         Types::Vec3d distanceV = m_pos - other.getPos();
-        return COULOMB_CONSTANT * m_charge * other.getCharge() * distanceV.normalized() /
-               distanceV.length2(distanceSoftening);
+        return Physics::coulombForce(distanceV, m_charge * other.getCharge(), distanceSoftening);
     }
 
     inline Types::Vec3d getCoulombForce(uint32_t stateIdx, Particle &other, Types::Vec3d distMod)
     {
-        Types::Vec3d distanceV = m_states[stateIdx].pos + distMod - other.statesData()[stateIdx].pos;
-        return COULOMB_CONSTANT * m_charge * other.getCharge() * distanceV.normalized() /
-               distanceV.length2(distanceSoftening);
+        Types::Vec3d distanceV = m_states.at(stateIdx).pos + distMod -
+                                 (other.isMovable() ? other.statesData().at(stateIdx).pos : other.getPos());
+        return Physics::coulombForce(distanceV, m_charge * other.getCharge(), distanceSoftening);
     }
 
     inline Types::Vec3d getCoulombForce(uint32_t stateIdx, Particle &other)
     {
-        Types::Vec3d distanceV = m_states[stateIdx].pos - other.statesData()[stateIdx].pos;
-        return COULOMB_CONSTANT * m_charge * other.getCharge() * distanceV.normalized() /
-               distanceV.length2(distanceSoftening);
+        Types::Vec3d distanceV =
+            m_states.at(stateIdx).pos - (other.isMovable() ? other.statesData().at(stateIdx).pos : other.getPos());
+        return Physics::coulombForce(distanceV, m_charge * other.getCharge(), distanceSoftening);
     }
 
     inline Types::Vec3d getCoulombForcePosOverwrite(uint32_t stateIdx, Particle &other, Types::Vec3d posOverwrite)
     {
-        Types::Vec3d distanceV = posOverwrite - other.statesData()[stateIdx].pos;
-        return COULOMB_CONSTANT * m_charge * other.getCharge() * distanceV.normalized() /
-               distanceV.length2(distanceSoftening);
+        Types::Vec3d distanceV =
+            posOverwrite - (other.isMovable() ? other.statesData().at(stateIdx).pos : other.getPos());
+        return Physics::coulombForce(distanceV, m_charge * other.getCharge(), distanceSoftening);
     }
 
     std::mutex &mutexData() { return *m_statesMutex; }
@@ -99,7 +103,7 @@ public:
     const Types::Vec3d &getVelocity() const { return m_velocity; }
     const Types::Vec3d &getPos() const { return m_pos; }
     void setCharge(double charge) { m_charge = charge; }
-    void setMass(double mass) { m_mass = std::clamp(mass, 0.0, 1000.0); };
+    void setMass(double mass) { m_mass = std::isfinite(mass) ? std::clamp(mass, 1.0e-12, 1000.0) : 1.0; };
     void setAffectingForce(Types::Vec3d affectingForce) { m_affectingForce = affectingForce; }
     void setAcceleration(Types::Vec3d acceleration) { m_acceleration = acceleration; }
     void setVelocity(Types::Vec3d velocity) { m_velocity = velocity; }
@@ -141,6 +145,7 @@ private:
     Types::Vec3d m_affectingForce;
 
     Trail m_trail;
+    std::optional<uint32_t> m_lastTrailStep;
 
     std::unique_ptr<State> m_initialState;
     std::unordered_map<uint32_t, State> m_states;

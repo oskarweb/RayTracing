@@ -14,7 +14,7 @@ BraceWrapping:
 BreakBeforeBraces: Custom
 IndentWidth: 4
 AlignAfterOpenBracket: Align
-Standard:        c++20
+Standard:        Latest
 SpacesBeforeTrailingComments: 1
 MaxEmptyLinesToKeep: 1
 KeepEmptyLinesAtTheStartOfBlocks: true
