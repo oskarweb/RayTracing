@@ -1,11 +1,11 @@
-#include "simulation.hpp"
+#include "simulation/simulation.hpp"
 
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_vulkan.h"
 
 #include "implot.h"
 
-#include "integration.hpp"
+#include "simulation/integration.hpp"
 #include <cstring>
 
 void Simulation::initWindow()

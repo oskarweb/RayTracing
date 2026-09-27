@@ -16,9 +16,15 @@ if(RAYTRACING_BUILD_TESTS)
     add_executable(raytracing_unit_tests
         sparse_set_tests.cpp physics_tests.cpp input_mesh_tests.cpp
         scene_tests.cpp simulation_tests.cpp
-        ../src/simulation/particle.cpp ../src/simulation/simulation.cpp ../src/raytracing/surface.cpp
+        ../src/simulation/src/simulation/particle.cpp
+        ../src/simulation/src/simulation/simulation.cpp
+        ../src/raytracing/src/raytracing/surface.cpp
     )
     target_link_libraries(raytracing_unit_tests PRIVATE raster GTest::gtest_main)
+    target_include_directories(raytracing_unit_tests PRIVATE
+        ${PROJECT_SOURCE_DIR}/src/simulation/include
+        ${PROJECT_SOURCE_DIR}/src/raytracing/include
+    )
     set_target_compile_options(raytracing_unit_tests)
     include(GoogleTest)
     gtest_discover_tests(raytracing_unit_tests

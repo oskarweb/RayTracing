@@ -1,6 +1,6 @@
 #pragma once
 
-#include "particle.hpp"
+#include "simulation/particle.hpp"
 
 #include "core/camera/camera.hpp"
 #include "core/camera/input.hpp"

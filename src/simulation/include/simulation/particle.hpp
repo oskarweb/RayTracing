@@ -5,7 +5,7 @@
 #include "core/scene/node.hpp"
 #include "core/scene/renderer_extras.hpp"
 #include "core/scene/trail.hpp"
-#include "integration.hpp"
+#include "simulation/integration.hpp"
 
 #include <glm/glm.hpp>
 

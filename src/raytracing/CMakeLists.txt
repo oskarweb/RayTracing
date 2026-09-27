@@ -3,16 +3,17 @@ set(RAY_TRACING_SUBPROJECT_NAME "ray_tracing" CACHE INTERNAL "")
 message(STATUS "Configuring ray tracing subproject: ${RAY_TRACING_SUBPROJECT_NAME}")
 
 add_executable(${RAY_TRACING_SUBPROJECT_NAME}
-    "main.cpp"
-    "body.cpp"
-    "body.hpp"
-    "ray_tracing.cpp"
-    "ray_tracing.hpp"
-    "surface.cpp"
-    "surface.hpp"
+    "src/raytracing/main.cpp"
+    "src/raytracing/body.cpp"
+    "include/raytracing/body.hpp"
+    "src/raytracing/ray_tracing.cpp"
+    "include/raytracing/ray_tracing.hpp"
+    "src/raytracing/surface.cpp"
+    "include/raytracing/surface.hpp"
 )
 
 target_link_libraries(${RAY_TRACING_SUBPROJECT_NAME} PRIVATE raster)
+target_include_directories(${RAY_TRACING_SUBPROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 set_target_properties(${RAY_TRACING_SUBPROJECT_NAME} PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/${RAY_TRACING_SUBPROJECT_NAME}"

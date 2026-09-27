@@ -3,27 +3,27 @@ set(CORE_LIB_NAME "core" CACHE INTERNAL "")
 message(STATUS "Configuring core library: ${CORE_LIB_NAME}")
 
 add_library(${CORE_LIB_NAME} STATIC
-    "resources/allocated_resources.hpp"
-    "resources/allocated_resources.cpp"
-    "vulkan/vulkan_handles.hpp"
-    "vulkan/commands.hpp"
-    "scene/base_object.hpp"
-    "camera/camera.hpp"
-    "extras.hpp"
-    "extras.cpp"
-    "resources/imports.cpp"
-    "camera/input.hpp"
-    "resources/mesh.hpp"
-    "resources/mesh.cpp"
-    "scene/models.hpp"
-    "scene/node.cpp"
-    "scene/node.hpp"
-    "scene/renderer.hpp"
-    "scene/renderer_extras.hpp"
-    "sparse_set.hpp"
-    "scene/trail.cpp"
-    "scene/trail.hpp"
-    "resources/vertex.hpp"
+    "include/core/resources/allocated_resources.hpp"
+    "src/core/resources/allocated_resources.cpp"
+    "include/core/vulkan/vulkan_handles.hpp"
+    "include/core/vulkan/commands.hpp"
+    "include/core/scene/base_object.hpp"
+    "include/core/camera/camera.hpp"
+    "include/core/extras.hpp"
+    "src/core/extras.cpp"
+    "src/core/resources/imports.cpp"
+    "include/core/camera/input.hpp"
+    "include/core/resources/mesh.hpp"
+    "src/core/resources/mesh.cpp"
+    "include/core/scene/models.hpp"
+    "src/core/scene/node.cpp"
+    "include/core/scene/node.hpp"
+    "include/core/scene/renderer.hpp"
+    "include/core/scene/renderer_extras.hpp"
+    "include/core/sparse_set.hpp"
+    "src/core/scene/trail.cpp"
+    "include/core/scene/trail.hpp"
+    "include/core/resources/vertex.hpp"
 )
 
 target_compile_definitions(${CORE_LIB_NAME} PUBLIC
@@ -50,7 +50,7 @@ target_link_libraries(${CORE_LIB_NAME}
 
 target_include_directories(${CORE_LIB_NAME}
     PUBLIC
-        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
 add_library(stb_image INTERFACE ${CMAKE_SOURCE_DIR}/third_party/stb_image/stb_image.h)

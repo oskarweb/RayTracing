@@ -3,17 +3,19 @@ set(SIMULATION_SUBPROJECT_NAME "coulomb_law_simulation" CACHE INTERNAL "")
 message(STATUS "Configuring simulation subproject: ${SIMULATION_SUBPROJECT_NAME}")
 
 add_executable(${SIMULATION_SUBPROJECT_NAME}
-    "main.cpp"
-    "particle.hpp"
-    "particle.cpp"
-    "simulation.hpp"
-    "simulation.cpp"
+    "src/simulation/main.cpp"
+    "include/simulation/particle.hpp"
+    "include/simulation/integration.hpp"
+    "src/simulation/particle.cpp"
+    "include/simulation/simulation.hpp"
+    "src/simulation/simulation.cpp"
 )
 
 target_link_libraries(${SIMULATION_SUBPROJECT_NAME}
     PRIVATE
         raster
 )
+target_include_directories(${SIMULATION_SUBPROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 set_target_properties(${SIMULATION_SUBPROJECT_NAME} PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/${SIMULATION_SUBPROJECT_NAME}"

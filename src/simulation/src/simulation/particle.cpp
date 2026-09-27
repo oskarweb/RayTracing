@@ -1,4 +1,4 @@
-#include "particle.hpp"
+#include "simulation/particle.hpp"
 
 Particle::Particle()
     : m_charge(0.0), m_mass(1.0), m_affectingForce(Types::Vec3d(0.0)), m_acceleration(Types::Vec3d(0.0)),

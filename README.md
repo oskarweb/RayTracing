@@ -1,5 +1,18 @@
 # RayTracing
 
+## Source layout
+
+Related classes are grouped into the `core`, `raster`, `raytracing`, and `simulation` modules under `src/`. Each module separates headers from implementations:
+
+```text
+src/<module>/
+    CMakeLists.txt
+    include/<module>/<header>.hpp
+    src/<module>/<source>.cpp
+```
+
+Subgroups retain their directories, for example `src/core/include/core/camera/input.hpp` and `src/core/src/core/resources/mesh.cpp`. Includes use module-relative paths such as `#include "raster/pipeline_factory.hpp"`; CMake exposes each library's `include/` directory to its consumers.
+
 ## Build
 
 ### Windows x64 with Clang and vcpkg
